@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { eth, short } from "../utils/format.js";
 import { resolveIpfsUrl } from "../utils/ipfs.js";
+import { Avatar } from "./Avatar.jsx";
 import { StatusBadge } from "./StatusBadge.jsx";
 
 function sameAddr(a, b) {
@@ -54,8 +55,8 @@ export function PropertyCard({ property: p, account, busy, onRent, onPay, onHand
       <div className="facts">
         <div><span>Tiền thuê/kỳ</span><b>{eth(p.monthlyRent)}</b></div>
         <div><span>Tiền cọc</span><b>{eth(p.deposit)}</b></div>
-        <div><span>Chủ nhà</span><b className="mono">{short(p.landlord)}</b></div>
-        <div><span>Người thuê</span><b className="mono">{short(p.tenant)}</b></div>
+        <div><span>Chủ nhà</span><div className="addr-row"><Avatar address={p.landlord} size={18} /><b className="mono">{short(p.landlord)}</b></div></div>
+        <div><span>Người thuê</span><div className="addr-row"><Avatar address={p.tenant} size={18} /><b className="mono">{short(p.tenant)}</b></div></div>
         {p.status >= 1 && <div><span>Số kỳ đã trả</span><b>{p.rentPaidCount}</b></div>}
         {p.depositHeld > 0n && <div><span>Cọc đang giữ</span><b>{eth(p.depositHeld)}</b></div>}
       </div>

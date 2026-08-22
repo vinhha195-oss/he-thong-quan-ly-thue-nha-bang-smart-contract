@@ -81,17 +81,21 @@ body {
 }
 .wallet:hover { background: #0d1830; transform: translateY(-1px); box-shadow: var(--shadow); }
 .wallet:active { transform: translateY(0); }
-.wallet.connected { background: #fff; color: var(--ink); border-color: var(--line); cursor: default; }
+.wallet.connected { background: #fff; color: var(--ink); border-color: var(--line); cursor: default; padding: 6px 16px 6px 6px; }
 .wallet.connected:hover { transform: none; box-shadow: var(--shadow-sm); background: #fff; }
-.wallet .dot {
-  display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--emerald);
-  box-shadow: 0 0 0 3px var(--emerald-wash);
-  animation: pulse-dot 2.4s ease-in-out infinite;
+
+.avatar {
+  display: inline-block; flex: none; border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(19, 31, 56, .08);
+}
+.wallet.connected .avatar {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--emerald);
+  animation: pulse-ring 2.4s ease-in-out infinite;
 }
 
-@keyframes pulse-dot {
-  0%, 100% { box-shadow: 0 0 0 3px var(--emerald-wash); }
-  50% { box-shadow: 0 0 0 5px var(--emerald-wash); }
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--emerald); }
+  50% { box-shadow: 0 0 0 2px #fff, 0 0 0 4.5px var(--emerald); }
 }
 
 .banner {
@@ -114,8 +118,9 @@ body {
 .mode-tag .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .role-switch { display: flex; gap: 6px; flex-wrap: wrap; }
 .role-switch button {
+  display: inline-flex; align-items: center; gap: 7px;
   border: 1px solid #cbd4f6; background: #fff; color: var(--ink);
-  padding: 6px 13px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;
+  padding: 5px 13px 5px 6px; border-radius: 999px; font-size: 12px; font-weight: 500; cursor: pointer;
   transition: all .15s var(--ease);
 }
 .role-switch button.on { background: var(--indigo); border-color: var(--indigo); color: #fff; box-shadow: 0 4px 10px -3px rgba(56, 73, 184, .5); }
@@ -214,6 +219,8 @@ button.ghost:disabled { opacity: .5; cursor: not-allowed; }
 .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; padding: 17px 0; border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line); }
 .facts span { display: block; font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
 .facts b { font-size: 14.5px; font-weight: 600; display: block; margin-top: 3px; }
+.addr-row { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+.addr-row b { margin-top: 0; }
 .mono { font-family: var(--mono); }
 
 .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }

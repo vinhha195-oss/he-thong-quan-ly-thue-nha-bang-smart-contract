@@ -1,4 +1,5 @@
 import { short } from "../utils/format.js";
+import { Avatar } from "./Avatar.jsx";
 
 const WALLET_ICON = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -18,7 +19,7 @@ export function TopBar({ account, onConnect }) {
         </div>
       </div>
       {account ? (
-        <div className="wallet connected"><span className="dot" />{short(account)}</div>
+        <div className="wallet connected"><Avatar address={account} size={26} />{short(account)}</div>
       ) : (
         <button className="wallet" onClick={onConnect}>{WALLET_ICON} Kết nối ví</button>
       )}
