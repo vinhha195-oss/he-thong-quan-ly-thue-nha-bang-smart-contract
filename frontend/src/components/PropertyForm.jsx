@@ -10,7 +10,7 @@ const CLOSE_ICON = (
   </svg>
 );
 
-export function PropertyForm({ busy, canSubmit, onSubmit }) {
+export function PropertyForm({ busy, canSubmit, isMock, onSubmit }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [manualCids, setManualCids] = useState("");
   const [images, setImages] = useState([]); // { id, previewUrl, cid, uploading, error }
@@ -18,8 +18,11 @@ export function PropertyForm({ busy, canSubmit, onSubmit }) {
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const submit = async () => {
-    const uploaded = images.filter((im) => im.cid).map((im) => im.cid);
-    const imageCID = joinCIDs([...uploaded, ...manualCids.split(",")]);
+    // Anh da upload IPFS thi dung CID that; anh chua upload (khong loi Pinata) thi o
+    // che do mock dung tam URL preview cuc bo (chi song trong tab nay), o che do chain
+    // that thi bo qua (khong the ghi 1 link blob: vo nghia vao contract that).
+    const fromPicker = images.map((im) => im.cid || (isMock ? im.previewUrl : null));
+    const imageCID = joinCIDs([...fromPicker, ...manualCids.split(",")]);
     await onSubmit({ ...form, imageCID });
     setForm(EMPTY_FORM);
     setManualCids("");
@@ -54,6 +57,8 @@ export function PropertyForm({ busy, canSubmit, onSubmit }) {
         });
     });
   };
+
+  const hasUnsavedImage = images.some((im) => !im.uploading && !im.cid);
 
   return (
     <section className="card form">
@@ -90,15 +95,23 @@ export function PropertyForm({ busy, canSubmit, onSubmit }) {
               <button type="button" className="image-remove" onClick={() => removeImage(im.id)} aria-label="Bỏ ảnh này">{CLOSE_ICON}</button>
               {im.uploading && <span className="image-status uploading">Đang tải…</span>}
               {!im.uploading && im.cid && <span className="image-status ok">Đã lưu IPFS</span>}
-              {!im.uploading && im.error && <span className="image-status warn">Chỉ xem trước</span>}
+              {!im.uploading && !im.cid && (
+                <span className={`image-status ${isMock ? "" : "warn"}`}>{isMock ? "Chỉ trong phiên này" : "Chưa lưu IPFS"}</span>
+              )}
             </div>
           ))}
         </div>
       )}
-      {images.some((im) => im.error) && (
+      {hasUnsavedImage && (
         <p className="hint" style={{ marginTop: -8 }}>
-          Một số ảnh chỉ xem trước, <b>chưa lưu lên IPFS</b> (chưa cấu hình <code>VITE_PINATA_JWT</code>) — dán CID
-          đã upload sẵn ở ô bên dưới nếu muốn ảnh lưu thật, hoặc bỏ qua để đăng tin không kèm ảnh đó.
+          {isMock ? (
+            <>Ở <b>chế độ dữ liệu mẫu</b>, ảnh chưa lưu IPFS vẫn hiển thị bình thường trong danh sách — nhưng chỉ trong
+            trình duyệt này và mất khi tải lại trang. Muốn lưu ảnh thật lên IPFS: cấu hình <code>VITE_PINATA_JWT</code> hoặc
+            dán CID đã upload sẵn ở ô bên dưới.</>
+          ) : (
+            <>Một số ảnh <b>chưa lưu lên IPFS</b> nên sẽ <b>không</b> được đính kèm khi đăng lên blockchain thật (chưa
+            cấu hình <code>VITE_PINATA_JWT</code>) — dán CID đã upload sẵn ở ô bên dưới nếu muốn ảnh đó lưu thật.</>
+          )}
         </p>
       )}
 

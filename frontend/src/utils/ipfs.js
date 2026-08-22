@@ -7,6 +7,13 @@
 // Neu khong cau hinh, nguoi dung van dung duoc tinh nang bang cach dan CID da tu upload
 // san (vd qua Pinata/NFT.Storage/web UI cua IPFS Desktop) vao form — khong bat buoc phai
 // dung code upload nay.
+//
+// resolveIpfsUrl cung cho qua thang URL "blob:..." (anh preview cuc bo trong trinh
+// duyet, tu URL.createObjectURL). PropertyForm dung no lam gia tri du phong O CHE DO
+// MOCK khi chua co CID that — hop ly vi du lieu mock von chi song trong bo nho trinh
+// duyet phien do (mat khi F5), khong phai du lieu that tren blockchain. O CHE DO CHAIN
+// THAT, blob: se KHONG duoc dung lam imageCID gui len contract (chi nguoi dang tin
+// trong chinh tab do moi xem duoc, vo nghia voi nguoi khac) — bat buoc phai co CID that.
 
 const GATEWAY = "https://ipfs.io/ipfs/";
 const PINATA_JWT = import.meta.env.VITE_PINATA_JWT || "";
@@ -18,7 +25,7 @@ export function resolveIpfsUrl(cidOrUrl) {
   if (!cidOrUrl) return null;
   const value = cidOrUrl.trim();
   if (!value) return null;
-  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("blob:")) return value;
   if (value.startsWith("ipfs://")) return GATEWAY + value.slice("ipfs://".length);
   return GATEWAY + value;
 }

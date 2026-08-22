@@ -35,7 +35,7 @@ function AppShell() {
 
       <main>
         {tab === "list" && (
-          <PropertyForm busy={busy} canSubmit={!!account} onSubmit={listProperty} />
+          <PropertyForm busy={busy} canSubmit={!!account} isMock={isMock} onSubmit={listProperty} />
         )}
 
         {tab === "browse" && (
