@@ -163,12 +163,19 @@ body {
 .form textarea:focus { outline: none; border-color: var(--teal); background: #fff; box-shadow: 0 0 0 3px var(--teal-wash); }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-.image-preview { margin: -6px 0 14px; }
-.image-preview img { width: 160px; height: 110px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); display: block; }
-.preview-status { display: block; margin-top: 8px; font-size: 12.5px; color: var(--ink-soft); max-width: 420px; line-height: 1.5; }
-.preview-status.ok { color: var(--emerald); font-family: var(--mono); }
-.preview-status.warn { color: var(--amber); }
-.preview-status code { font-family: var(--mono); background: var(--slate-wash); padding: 1px 5px; border-radius: 4px; }
+.image-preview-grid { display: flex; flex-wrap: wrap; gap: 12px; margin: -4px 0 16px; }
+.image-preview-item { position: relative; width: 96px; }
+.image-preview-item img { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); display: block; }
+.image-remove {
+  position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--ink); color: #fff; border: 2px solid #fff; display: grid; place-items: center;
+  cursor: pointer; box-shadow: var(--shadow-sm); transition: background .15s var(--ease);
+}
+.image-remove:hover { background: var(--rose); }
+.image-status { display: block; text-align: center; font-size: 10.5px; margin-top: 5px; color: var(--ink-soft); }
+.image-status.ok { color: var(--emerald); }
+.image-status.warn { color: var(--amber); }
+.hint code { font-family: var(--mono); background: var(--slate-wash); padding: 1px 5px; border-radius: 4px; }
 
 button.primary {
   display: inline-flex; align-items: center; gap: 8px; justify-content: center;
@@ -207,7 +214,7 @@ button.ghost:disabled { opacity: .5; cursor: not-allowed; }
   display: block; width: 100%; border: none; padding: 0; margin: 0 0 18px; background: none; cursor: pointer;
 }
 .property-image, .property-image-placeholder {
-  width: calc(100% + 52px); height: 168px; object-fit: cover; display: block;
+  width: calc(100% + 52px); height: 168px; display: block; position: relative; overflow: hidden;
   margin: -1px -26px 0;
 }
 .property-head h3.clickable { cursor: pointer; transition: color .12s var(--ease); }
@@ -219,6 +226,11 @@ button.ghost:disabled { opacity: .5; cursor: not-allowed; }
   color: var(--ink-faint);
 }
 .property-image-placeholder svg { width: 34px; height: 34px; opacity: .55; }
+.img-fill { width: 100%; height: 100%; object-fit: cover; display: block; }
+.image-count-badge {
+  position: absolute; right: 10px; bottom: 10px; background: rgba(19, 31, 56, .72); color: #fff;
+  font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 999px; backdrop-filter: blur(2px);
+}
 .property-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
 .property h3 { font-size: 16px; font-family: "Space Grotesk", sans-serif; }
 .loc { font-size: 13px; color: var(--ink-soft); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
@@ -310,10 +322,18 @@ button.ghost:disabled { opacity: .5; cursor: not-allowed; }
 .modal-close:hover { background: var(--line); color: var(--ink); }
 
 .detail-image, .detail-image-placeholder {
-  width: calc(100% + 56px); height: 220px; object-fit: cover; display: block;
+  width: calc(100% + 56px); height: 220px; display: block; position: relative; overflow: hidden;
   margin: -28px -28px 20px;
 }
 .detail-image { background: var(--slate-wash); }
+.gallery-thumbs { display: flex; gap: 8px; margin: -8px 0 20px; overflow-x: auto; padding-bottom: 2px; }
+.gallery-thumb {
+  flex: none; width: 56px; height: 56px; border-radius: 10px; overflow: hidden; padding: 0;
+  border: 2px solid transparent; cursor: pointer; opacity: .6; transition: all .15s var(--ease); background: var(--slate-wash);
+}
+.gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery-thumb:hover { opacity: .85; }
+.gallery-thumb.on { opacity: 1; border-color: var(--teal); }
 .detail-image-placeholder {
   display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, var(--teal-wash), var(--indigo-wash));

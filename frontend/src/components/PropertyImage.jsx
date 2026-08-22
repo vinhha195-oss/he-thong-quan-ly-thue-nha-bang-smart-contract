@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { resolveIpfsUrl } from "../utils/ipfs.js";
+import { resolveIpfsUrls } from "../utils/ipfs.js";
 
 const HOUSE_ICON = (
   <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -7,20 +7,28 @@ const HOUSE_ICON = (
   </svg>
 );
 
-/** Anh phong hoac placeholder gradient, dung chung cho card va modal chi tiet. */
-export function PropertyImage({ property: p, imgClass, placeholderClass }) {
+/**
+ * Anh dau tien cua phong (dung cho card/cover) hoac placeholder gradient neu khong co
+ * anh nao. imgClass/placeholderClass quyet dinh kich thuoc/vi tri (bleed ra vien card
+ * hay modal) — ap dung cho div bao ngoai, <img> ben trong luon fill 100%.
+ */
+export function PropertyImage({ property: p, imgClass, placeholderClass, badge }) {
   const [imageFailed, setImageFailed] = useState(false);
-  const imageUrl = resolveIpfsUrl(p.imageCID);
+  const urls = resolveIpfsUrls(p.imageCID);
+  const cover = urls[0];
 
-  if (imageUrl && !imageFailed) {
+  if (cover && !imageFailed) {
     return (
-      <img
-        className={imgClass}
-        src={imageUrl}
-        alt={p.title || `Phòng #${p.id}`}
-        loading="lazy"
-        onError={() => setImageFailed(true)}
-      />
+      <div className={imgClass}>
+        <img
+          className="img-fill"
+          src={cover}
+          alt={p.title || `Phòng #${p.id}`}
+          loading="lazy"
+          onError={() => setImageFailed(true)}
+        />
+        {badge && urls.length > 1 && <span className="image-count-badge">+{urls.length - 1} ảnh</span>}
+      </div>
     );
   }
   return <div className={placeholderClass}>{HOUSE_ICON}</div>;

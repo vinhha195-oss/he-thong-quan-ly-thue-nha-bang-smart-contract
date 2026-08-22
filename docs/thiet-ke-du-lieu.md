@@ -32,7 +32,7 @@ trước (kiểm tra bằng `require`).
 | `depositHeld` | `uint256` | Số tiền cọc **đang thực sự nằm trong contract** (giảm về 0 sau `endLease`). |
 | `startedAt` | `uint256` | Thời điểm `rentProperty` thành công (block timestamp). |
 | `rentPaidCount` | `uint256` | Số kỳ đã trả tiền thuê thành công. |
-| `imageCID` | `string` | CID (hoặc URL) ảnh phòng lưu trên **IPFS**, có thể rỗng (`""`) nếu chủ nhà không đính kèm ảnh. Contract chỉ lưu chuỗi tham chiếu — file ảnh thật nằm trên IPFS, không lưu on-chain. |
+| `imageCID` | `string` | Một hoặc nhiều CID/URL ảnh phòng lưu trên **IPFS**, cách nhau bằng dấu phẩy nếu nhiều ảnh; rỗng (`""`) nếu chủ nhà không đính kèm ảnh. Vẫn chỉ là 1 field `string` — không đổi kiểu dữ liệu on-chain khi hỗ trợ nhiều ảnh. Contract chỉ lưu chuỗi tham chiếu — file ảnh thật nằm trên IPFS, không lưu on-chain. |
 | `note` | `string` | Ghi chú tự do của chủ nhà (nội quy, lưu ý…), có thể rỗng (`""`). |
 
 `propertyCount` (uint256) và `mapping(uint256 => Property) properties` lưu toàn bộ

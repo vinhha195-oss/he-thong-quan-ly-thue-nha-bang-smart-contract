@@ -30,7 +30,7 @@ Xem chi tiết bài toán, actor, và phạm vi chức năng tại
 | Blockchain | Hardhat Local Network (đã demo), Ethereum Sepolia testnet (đã hướng dẫn deploy) | |
 | Frontend | ReactJS + Vite, ethers.js v6, MetaMask | Tách UI khỏi nguồn dữ liệu qua lớp `RentalService` (interface chung cho `MockRentalService`/`ChainRentalService`) |
 | Backend | Node.js + TypeScript, Express, `node:sqlite` | Event indexer + REST API, không phải nguồn dữ liệu chính — chỉ là lớp chỉ mục để tra cứu nhanh |
-| Lưu tệp | IPFS (`Property.imageCID`) | Ảnh phòng (không bắt buộc) tham chiếu bằng CID; upload trực tiếp qua Pinata nếu người dùng tự cấu hình `VITE_PINATA_JWT`, hoặc dán CID đã upload sẵn — cùng nguyên tắc với việc tự cấu hình khoá Sepolia |
+| Lưu tệp | IPFS (`Property.imageCID`) | Ảnh phòng (không bắt buộc, chọn được nhiều ảnh) tham chiếu bằng danh sách CID cách nhau dấu phẩy; upload trực tiếp qua Pinata nếu người dùng tự cấu hình `VITE_PINATA_JWT`, hoặc dán CID đã upload sẵn — cùng nguyên tắc với việc tự cấu hình khoá Sepolia |
 | Test | Hardhat Test + Chai (Mocha) | 19 test case |
 | Bảo mật | Slither (gặp giới hạn tương thích) + rà soát thủ công | Xem mục 6 |
 | Quản lý mã nguồn | Git/GitHub | Xem mục 8 |

@@ -24,6 +24,24 @@ export function resolveIpfsUrl(cidOrUrl) {
 }
 
 /**
+ * Property.imageCID co the chua NHIEU anh, cach nhau boi dau phay (van la 1 field
+ * string duy nhat tren contract - khong can doi schema). Ham nay tach + resolve tung
+ * anh thanh mang URL xem duoc.
+ */
+export function resolveIpfsUrls(cidList) {
+  if (!cidList) return [];
+  return cidList
+    .split(",")
+    .map((c) => resolveIpfsUrl(c))
+    .filter(Boolean);
+}
+
+/** Gop mang CID (co the chua chuoi rong) thanh 1 chuoi cach nhau boi dau phay. */
+export function joinCIDs(cids) {
+  return cids.map((c) => c?.trim()).filter(Boolean).join(",");
+}
+
+/**
  * Upload 1 file len IPFS qua Pinata REST API. Chi dung duoc khi VITE_PINATA_JWT da
  * duoc cau hinh (bien moi truong frontend, nguoi dung tu lay JWT tu tai khoan Pinata
  * cua ho — mien phi, khong can the tin dung). Tra ve CID cua file.

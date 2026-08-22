@@ -2,7 +2,7 @@ import { eth, short, dateTime } from "../utils/format.js";
 import { Avatar } from "./Avatar.jsx";
 import { Modal } from "./Modal.jsx";
 import { PropertyActions } from "./PropertyActions.jsx";
-import { PropertyImage } from "./PropertyImage.jsx";
+import { PropertyGallery } from "./PropertyGallery.jsx";
 import { StatusBadge } from "./StatusBadge.jsx";
 
 export function PropertyDetailModal({ property: p, history, account, busy, onClose, onRent, onPay, onHandover, onEnd, onSelectTx }) {
@@ -11,7 +11,7 @@ export function PropertyDetailModal({ property: p, history, account, busy, onClo
 
   return (
     <Modal open={!!p} onClose={onClose} wide>
-      <PropertyImage property={p} imgClass="detail-image" placeholderClass="detail-image-placeholder" />
+      <PropertyGallery property={p} />
 
       <div className="detail-title">
         <h2>{p.title || `Phòng #${p.id}`}</h2>

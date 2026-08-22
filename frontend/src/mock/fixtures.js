@@ -24,7 +24,7 @@ const TEMPLATES = [
   { title: "Căn hộ mini Quận 7", location: "TP. Hồ Chí Minh", rent: "0.5", deposit: "1", note: "", image: null },
   { title: "Nhà nguyên căn Thủ Đức", location: "TP. Hồ Chí Minh", rent: "3", deposit: "6", note: "Có chỗ để xe hơi.", image: 1 },
   { title: "Phòng trọ Bình Thạnh", location: "TP. Hồ Chí Minh", rent: "1.2", deposit: "2.4", note: "", image: null },
-  { title: "Studio Quận 3, ban công", location: "TP. Hồ Chí Minh", rent: "2", deposit: "4", note: "Gần chợ, tiện đi lại.", image: 0 },
+  { title: "Studio Quận 3, ban công", location: "TP. Hồ Chí Minh", rent: "2", deposit: "4", note: "Gần chợ, tiện đi lại.", image: [0, 1] },
   { title: "Phòng trọ Gò Vấp", location: "TP. Hồ Chí Minh", rent: "0.9", deposit: "1.8", note: "", image: null },
   { title: "Căn hộ 2PN Tân Bình", location: "TP. Hồ Chí Minh", rent: "4", deposit: "8", note: "Có thang máy, bảo vệ 24/7.", image: 1 },
   { title: "Phòng trọ Phú Nhuận", location: "TP. Hồ Chí Minh", rent: "1.5", deposit: "3", note: "", image: null },
@@ -75,7 +75,12 @@ export function createInitialProperties() {
       tenant: isRented ? tenant.address : ethers.ZeroAddress,
       depositHeld: status === 3 ? 0n : isRented ? deposit : 0n,
       rentPaidCount: t.rentPaidCount ?? 0,
-      imageCID: t.image === null || t.image === undefined ? "" : SAMPLE_IMAGES[t.image],
+      imageCID:
+        t.image === null || t.image === undefined
+          ? ""
+          : Array.isArray(t.image)
+            ? t.image.map((i) => SAMPLE_IMAGES[i]).join(",")
+            : SAMPLE_IMAGES[t.image],
       note: t.note,
     };
   });

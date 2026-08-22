@@ -8,7 +8,7 @@ export function PropertyCard({ property: p, account, busy, onRent, onPay, onHand
   return (
     <div className="card property">
       <button className="property-image-btn" onClick={() => onOpen(p)} aria-label="Xem chi tiết phòng">
-        <PropertyImage property={p} imgClass="property-image" placeholderClass="property-image-placeholder" />
+        <PropertyImage property={p} imgClass="property-image" placeholderClass="property-image-placeholder" badge />
       </button>
       <div className="property-head">
         <div>
