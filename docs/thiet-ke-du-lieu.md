@@ -1,6 +1,9 @@
 # Thiết kế dữ liệu / cấu trúc smart contract
 
-Nguồn: [`contracts/RentalManager.sol`](../contracts/RentalManager.sol).
+Nguồn: [`contracts/RentalManager.sol`](../contracts/RentalManager.sol) (nghiệp vụ) và
+[`contracts/RentalAgreementToken.sol`](../contracts/RentalAgreementToken.sol) (token
+ERC-721 đại diện một hợp đồng thuê — xem lý do tách 2 contract và lý do chọn ERC-721
+tại [docs/lua-chon-token.md](./lua-chon-token.md)).
 
 ## 1. Enum `Status` — vòng đời một tài sản/hợp đồng
 
@@ -29,6 +32,7 @@ trước (kiểm tra bằng `require`).
 | `depositHeld` | `uint256` | Số tiền cọc **đang thực sự nằm trong contract** (giảm về 0 sau `endLease`). |
 | `startedAt` | `uint256` | Thời điểm `rentProperty` thành công (block timestamp). |
 | `rentPaidCount` | `uint256` | Số kỳ đã trả tiền thuê thành công. |
+| `imageCID` | `string` | CID (hoặc URL) ảnh phòng lưu trên **IPFS**, có thể rỗng (`""`) nếu chủ nhà không đính kèm ảnh. Contract chỉ lưu chuỗi tham chiếu — file ảnh thật nằm trên IPFS, không lưu on-chain. |
 
 `propertyCount` (uint256) và `mapping(uint256 => Property) properties` lưu toàn bộ
 tài sản, id bắt đầu từ 1.
@@ -51,8 +55,8 @@ thanh toán" mà không cần một database off-chain riêng.
 
 | Hàm | Ai gọi được | Điều kiện chặn | Hiệu ứng tiền |
 |---|---|---|---|
-| `listProperty(title, location, monthlyRent, deposit)` | Bất kỳ ai (trở thành chủ nhà) | `monthlyRent > 0` | Không chuyển tiền. |
-| `rentProperty(id)` payable | Bất kỳ ai trừ chủ nhà | tài sản tồn tại; đang `Listed`; `msg.sender != landlord`; `msg.value == deposit` | ETH gửi kèm **ở lại trong contract** (`depositHeld`). |
+| `listProperty(title, location, monthlyRent, deposit, imageCID)` | Bất kỳ ai (trở thành chủ nhà) | `monthlyRent > 0` | Không chuyển tiền. `imageCID` có thể truyền `""` nếu không có ảnh. |
+| `rentProperty(id)` payable | Bất kỳ ai trừ chủ nhà | tài sản tồn tại; đang `Listed`; `msg.sender != landlord`; `msg.value == deposit` | ETH gửi kèm **ở lại trong contract** (`depositHeld`); đồng thời mint 1 `RentalAgreementToken` với `tokenId = id` cho người thuê. |
 | `payRent(id)` payable | Đúng `tenant` | đang `Active`; `msg.sender == tenant`; `msg.value == monthlyRent` | ETH **chuyển thẳng** cho `landlord` qua `call{value:}`. |
 | `confirmHandover(id)` | Đúng `tenant` | đang `Active`; `msg.sender == tenant` | Không chuyển tiền. |
 | `endLease(id, deductAmount)` | Đúng `landlord` | đang `HandedOver`; `msg.sender == landlord`; `deductAmount <= depositHeld` | Chuyển `deductAmount` cho `landlord`, phần còn lại (`depositHeld - deductAmount`) hoàn cho `tenant`. |
@@ -74,3 +78,43 @@ Cả `rentProperty`, `payRent`, `endLease` đều có modifier `nonReentrant`
 **checks-effects-interactions**: cập nhật state (`p.status`, `p.depositHeld`,
 `p.rentPaidCount`) **trước** khi gọi `.call{value: ...}("")` chuyển ETH — nhờ vậy dù bên
 nhận là một contract độc hại cố gọi lại (`re-enter`) cũng không khai thác được state cũ.
+Việc mint token trong `rentProperty` cũng đặt **sau** khi cập nhật state + emit event,
+theo đúng nguyên tắc này (xem mục 7 bên dưới).
+
+## 7. Contract `RentalAgreementToken` (token đại diện hợp đồng thuê)
+
+ERC-721 (`OpenZeppelin ERC721` + `AccessControl`), tên `"Rental Agreement"`, ký hiệu
+`"LEASE"`. Không kế thừa từ `RentalManager`, được `RentalManager` gọi sang qua địa chỉ
+lưu tại biến `immutable agreementToken`.
+
+### Vai trò
+
+| Vai trò | `bytes32` | Ai được cấp |
+|---|---|---|
+| `DEFAULT_ADMIN_ROLE` | `0x00` | Địa chỉ deploy (`admin` truyền vào constructor) |
+| `MINTER_ROLE` | `keccak256("MINTER_ROLE")` | Địa chỉ `RentalManager` (cấp qua Ignition module sau khi deploy) |
+
+### Hàm
+
+| Hàm | Ai gọi được | Ghi chú |
+|---|---|---|
+| `mintAgreement(tenant, propertyId)` | Chỉ `MINTER_ROLE` | Mint token `tokenId = propertyId` cho `tenant`. Revert `AccessControlUnauthorizedAccount` nếu gọi sai vai trò. |
+| `transferFrom` / `safeTransferFrom` (kế thừa từ `ERC721`) | — | **Luôn revert** `TransferNotAllowed()` — token khoá vĩnh viễn sau khi mint (override `_update`). |
+| `approve` / `setApprovalForAll` | — | **Luôn revert** `TransferNotAllowed()` — không cần approve vì không thể chuyển nhượng. |
+| `ownerOf(tokenId)` (kế thừa) | Bất kỳ ai (view) | Trả về địa chỉ người thuê đã/đang giữ hợp đồng thuê đó — không đổi kể cả sau `endLease`. |
+
+Không có hàm `burn` — token tồn tại vĩnh viễn kể cả sau khi hợp đồng `Ended`, đóng vai
+trò bằng chứng lịch sử "đã từng thuê tài sản này", giống nguyên tắc "không xoá lịch sử"
+ở ví dụ chứng chỉ.
+
+### Sơ đồ quan hệ
+
+```
+RentalManager.rentProperty(id)
+        │  (sau khi cap nhat xong Property state + emit Rented)
+        ▼
+RentalAgreementToken.mintAgreement(tenant, id)
+        │
+        ▼
+ownerOf(id) == tenant   (vinh vien, khong the transfer/burn)
+```

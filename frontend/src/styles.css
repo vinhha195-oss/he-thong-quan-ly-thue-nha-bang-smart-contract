@@ -106,6 +106,7 @@ button.ghost:hover:not(:disabled) { border-color: var(--ink-soft); }
 
 /* Property grid */
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.property-image { width: calc(100% + 48px); height: 160px; object-fit: cover; display: block; margin: -24px -24px 16px; border-radius: 15px 15px 0 0; background: var(--line); }
 .property-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
 .property h3 { font-size: 16px; font-family: "Space Grotesk", sans-serif; }
 .loc { font-size: 13px; color: var(--ink-soft); }

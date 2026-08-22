@@ -56,6 +56,7 @@ export class ChainRentalService {
       tenant: p.tenant,
       depositHeld: p.depositHeld,
       rentPaidCount: Number(p.rentPaidCount),
+      imageCID: p.imageCID,
     }));
   }
 
@@ -77,9 +78,9 @@ export class ChainRentalService {
     return events;
   }
 
-  async listProperty({ title, location, rent, deposit }, { onPending } = {}) {
+  async listProperty({ title, location, rent, deposit, imageCID }, { onPending } = {}) {
     const c = await this.#getContract(true);
-    const t = await c.listProperty(title, location, ethers.parseEther(rent), ethers.parseEther(deposit || "0"));
+    const t = await c.listProperty(title, location, ethers.parseEther(rent), ethers.parseEther(deposit || "0"), imageCID || "");
     onPending?.();
     await t.wait();
   }

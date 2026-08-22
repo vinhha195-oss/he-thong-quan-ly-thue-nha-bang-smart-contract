@@ -54,14 +54,21 @@ flowchart TB
 
     MetaMask[[MetaMask]]
     Node[["Hardhat Local Node\n/ Sepolia testnet"]]
-    Contract[["RentalManager.sol\n(đã deploy)"]]
+    Manager[["RentalManager.sol\n(nghiệp vụ, đã deploy)"]]
+    Token[["RentalAgreementToken.sol\n(ERC-721 không chuyển nhượng)"]]
 
     UI --> Context
     Context --> Factory
     Factory --> Mock
     Factory --> Chain
-    Chain --> MetaMask --> Node --> Contract
+    Chain --> MetaMask --> Node --> Manager
+    Manager -- "mintAgreement() khi rentProperty" --> Token
 ```
+
+Frontend chỉ gọi vào `RentalManager` (ABI/hàm/sự kiện giữ nguyên như trước khi tách
+contract) — `RentalAgreementToken` là chi tiết triển khai nội bộ giữa 2 contract, không
+lộ ra ngoài giao diện. Xem lý do tách 2 contract tại
+[docs/lua-chon-token.md](./lua-chon-token.md).
 
 ## 3. Sequence diagram — các luồng nghiệp vụ chính
 
@@ -80,7 +87,9 @@ sequenceDiagram
     Ctx->>Svc: rentProperty(property, {onPending})
     Svc->>SC: rentProperty(id) kèm value = deposit
     SC-->>SC: require: đang trống, không phải chủ nhà,\nđúng số tiền cọc
-    SC-->>Svc: emit Rented + tiền cọc giữ tại contract
+    SC-->>SC: emit Rented + tiền cọc giữ tại contract
+    SC->>SC: mintAgreement(tenant, id) trên RentalAgreementToken\n(tokenId = id, không chuyển nhượng)
+    SC-->>Svc: resolve
     Svc-->>Ctx: resolve
     Ctx->>Svc: loadProperties() + loadHistory()
     Ctx-->>UI: cập nhật state -> re-render

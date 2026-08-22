@@ -1,4 +1,5 @@
 import { eth, short } from "../utils/format.js";
+import { resolveIpfsUrl } from "../utils/ipfs.js";
 import { StatusBadge } from "./StatusBadge.jsx";
 
 function sameAddr(a, b) {
@@ -15,8 +16,19 @@ export function PropertyCard({ property: p, account, busy, onRent, onPay, onHand
     onEnd(p, input);
   };
 
+  const imageUrl = resolveIpfsUrl(p.imageCID);
+
   return (
     <div className="card property">
+      {imageUrl && (
+        <img
+          className="property-image"
+          src={imageUrl}
+          alt={p.title || `Phòng #${p.id}`}
+          loading="lazy"
+          onError={(e) => { e.currentTarget.style.display = "none"; }}
+        />
+      )}
       <div className="property-head">
         <div>
           <h3>{p.title || `Phòng #${p.id}`}</h3>

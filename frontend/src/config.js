@@ -1,6 +1,22 @@
-// File nay duoc tao tu dong boi scripts/deploy.js - KHONG sua tay.
-export const CONTRACT_ADDRESS = "0x73AED0521726D47022BDc4Bc6BA863B67Ae9ca35";
+// File nay duoc tao tu dong boi scripts/sync-frontend-config.ts - KHONG sua tay.
+export const CONTRACT_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 export const CONTRACT_ABI = [
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenAddress",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidTokenAddress",
+    "type": "error"
+  },
   {
     "inputs": [],
     "name": "ReentrancyGuardReentrantCall",
@@ -160,6 +176,19 @@ export const CONTRACT_ABI = [
     ],
     "name": "Rented",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "agreementToken",
+    "outputs": [
+      {
+        "internalType": "contract RentalAgreementToken",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [

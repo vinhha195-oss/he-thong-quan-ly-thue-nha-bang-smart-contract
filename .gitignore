@@ -7,3 +7,5 @@ cache/
 .env
 frontend/.env
 *.lnk
+ignition/deployments/chain-31337/
+dist/

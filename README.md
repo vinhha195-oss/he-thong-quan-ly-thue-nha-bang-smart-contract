@@ -6,23 +6,35 @@ và ghi lại mọi giao dịch minh bạch, không thể chỉnh sửa.
 
 ## Công nghệ
 
-- **Smart contract:** Solidity + OpenZeppelin (ReentrancyGuard)
-- **Môi trường:** Hardhat (biên dịch, test, mạng blockchain local)
+- **Smart contract:** Solidity + OpenZeppelin (`ERC721`, `AccessControl`,
+  `ReentrancyGuard`) — 2 contract tách riêng token và nghiệp vụ, xem
+  [docs/lua-chon-token.md](docs/lua-chon-token.md)
+- **Môi trường:** Hardhat 3 + TypeScript (biên dịch, test, mạng blockchain local,
+  triển khai bằng Hardhat Ignition)
 - **Giao diện:** ReactJS (Vite) + ethers.js, kết nối ví MetaMask
+- **Lưu tệp:** IPFS — ảnh phòng cho thuê (không bắt buộc) được tham chiếu bằng CID lưu
+  trong `Property.imageCID`, file thật nằm trên IPFS chứ không lưu on-chain. Xem
+  `frontend/src/utils/ipfs.js` và `.env.example` (biến `VITE_PINATA_JWT`, tuỳ chọn).
+- **Backend (tuỳ chọn):** Node.js + TypeScript, index event từ blockchain vào SQLite,
+  expose REST API — xem [backend/README.md](backend/README.md)
 
 ## Cấu trúc thư mục
 
 ```
 rental-dapp/
-├── contracts/RentalManager.sol      # Smart contract chính
-├── scripts/deploy.js                # Deploy + tự ghi cấu hình sang frontend
-├── test/RentalManager.test.js       # Bộ test (11 test case)
-├── hardhat.config.js                # Mạng: localhost + sepolia (qua .env)
-├── docs/                            # Phân tích bài toán, use case/kiến trúc,
-│                                     # thiết kế dữ liệu, giới hạn & rủi ro bảo mật
+├── contracts/
+│   ├── RentalManager.sol            # Nghiệp vụ: đăng/thuê/trả tiền/bàn giao/tất toán
+│   └── RentalAgreementToken.sol     # ERC-721 không chuyển nhượng, đại diện 1 hợp đồng thuê
+├── ignition/modules/RentalSystem.ts # Triển khai 2 contract + cấp MINTER_ROLE (Hardhat Ignition)
+├── scripts/sync-frontend-config.ts  # Đọc dia chỉ đã deploy, ghi sang frontend/src/config.js
+├── test/RentalManager.test.ts       # Bộ test TypeScript (Hardhat 3 + Mocha)
+├── hardhat.config.ts                # Mạng: localhost + sepolia (bí mật qua Hardhat keystore)
+├── backend/                         # Event indexer + REST API (SQLite) — tuỳ chọn, xem Bước 4
+├── docs/                            # Phân tích bài toán, chọn loại token, use case/kiến
+│                                     # trúc, thiết kế dữ liệu, giới hạn & rủi ro bảo mật
 └── frontend/                        # Giao diện web React (Vite)
     └── src/
-        ├── config.js                 # Địa chỉ + ABI contract (tự sinh khi deploy)
+        ├── config.js                 # Địa chỉ + ABI của RentalManager (tự sinh khi deploy)
         ├── mock/fixtures.js          # Dữ liệu mẫu cho chế độ mock
         ├── services/                 # Lớp "BE": RentalService (interface chung),
         │                             # ChainRentalService (ethers.js thật),
@@ -32,6 +44,9 @@ rental-dapp/
         ├── components/               # UI thuần, không biết gì về ethers/blockchain
         └── App.jsx
 ```
+
+Frontend chỉ gọi vào `RentalManager` — `RentalAgreementToken` là chi tiết nội bộ, không
+cần đổi gì bên frontend dù kiến trúc contract có 2 hợp đồng thay vì 1.
 
 **Kiến trúc tách UI/BE**: mọi component trong `components/` chỉ nhận props và callback,
 không gọi ethers.js trực tiếp. Toàn bộ logic đọc/ghi blockchain nằm trong `services/`,
@@ -98,11 +113,17 @@ Cửa sổ này sẽ hiện ra **danh sách 20 tài khoản test**, mỗi tài k
 Mở terminal thứ hai (vẫn ở thư mục `rental-dapp`):
 
 ```bash
-npx hardhat run scripts/deploy.js --network localhost
+npm run deploy
 ```
 
-Lệnh này deploy contract và **tự động** ghi địa chỉ + ABI vào `frontend/src/config.js`
-(bạn không phải copy-paste gì cả).
+Lệnh này dùng **Hardhat Ignition** để deploy cả 2 contract (`RentalAgreementToken` rồi
+`RentalManager`, tự cấp quyền mint), sau đó **tự động** ghi địa chỉ + ABI của
+`RentalManager` vào `frontend/src/config.js` (bạn không phải copy-paste gì cả).
+
+> Nếu deploy lại nhiều lần trên cùng một `hardhat node` đang chạy, không cần xoá gì cả.
+> Nhưng nếu bạn **tắt rồi bật lại** `hardhat node` (bước 2), phải xoá thư mục deployment
+> cũ trước khi deploy lại: `rm -rf ignition/deployments/chain-31337` (Hardhat Ignition
+> lưu trạng thái deploy trên đĩa, nếu không xoá nó sẽ tưởng đã deploy rồi và bỏ qua).
 
 ### Bước 4 — Chạy giao diện web (terminal 2)
 
@@ -141,23 +162,35 @@ Trong MetaMask → **Import account** → dán private key.
 ## Deploy lên Sepolia testnet (tuỳ chọn)
 
 Mặc định chỉ cần mạng Hardhat local là đủ cho yêu cầu tối thiểu. Muốn deploy lên một
-testnet thật (Sepolia):
+testnet thật (Sepolia), Hardhat 3 lưu bí mật (RPC URL, private key) trong **keystore mã
+hoá cục bộ** thay vì file `.env` — an toàn hơn vì không có file plaintext nào có thể lỡ
+tay commit lên GitHub:
 
-1. Tạo file `.env` ở thư mục gốc từ mẫu có sẵn:
+1. Lưu RPC URL vào keystore (lệnh sẽ hỏi bạn đặt mật khẩu keystore rồi nhập giá trị):
    ```bash
-   cp .env.example .env
+   npx hardhat keystore set SEPOLIA_RPC_URL
    ```
-2. Điền `SEPOLIA_RPC_URL` (đăng ký miễn phí ở [Alchemy](https://www.alchemy.com/) hoặc
-   [Infura](https://www.infura.io/), tạo app cho mạng Sepolia) và `PRIVATE_KEY` của
-   **một ví test** — tuyệt đối không dùng ví có tiền thật.
-3. Lấy ETH Sepolia miễn phí từ faucet, ví dụ https://sepoliafaucet.com.
+   Giá trị: RPC URL đăng ký miễn phí ở [Alchemy](https://www.alchemy.com/) hoặc
+   [Infura](https://www.infura.io/), tạo app cho mạng Sepolia — hoặc dùng RPC công khai
+   `https://ethereum-sepolia-rpc.publicnode.com` (không cần đăng ký).
+2. Lưu private key vào keystore:
+   ```bash
+   npx hardhat keystore set SEPOLIA_PRIVATE_KEY
+   ```
+   Giá trị: private key của **một ví test riêng** — tuyệt đối không dùng ví có tiền thật.
+3. Lấy ETH Sepolia miễn phí từ faucet, ví dụ
+   https://www.alchemy.com/faucets/ethereum-sepolia hoặc https://sepolia-faucet.pk910.de/.
 4. Deploy:
    ```bash
    npm run deploy:sepolia
    ```
-   Lệnh này ghi địa chỉ + ABI vào `frontend/src/config.js` giống hệt deploy local.
+   Lệnh này chạy Hardhat Ignition trên mạng Sepolia rồi ghi địa chỉ + ABI vào
+   `frontend/src/config.js` giống hệt deploy local.
 5. Đổi mạng MetaMask sang **Sepolia** (có sẵn trong danh sách mạng mặc định), rồi chạy
    `cd frontend && npm run dev` như bình thường.
+
+> Xem lại giá trị đã lưu: `npx hardhat keystore list`. Xoá một giá trị: `npx hardhat
+> keystore delete <TÊN_BIẾN>`.
 
 ---
 
@@ -229,9 +262,15 @@ chủ nhà, hoàn/khấu trừ cọc chính xác, và chặn các trường hợ
 ## Tài liệu dự án
 
 - [docs/phan-tich-bai-toan.md](docs/phan-tich-bai-toan.md) — phân tích bài toán, đối tượng người dùng, phạm vi chức năng.
+- [docs/lua-chon-token.md](docs/lua-chon-token.md) — vì sao cần token, so sánh ERC-20/721/1155, lý do tách 2 contract.
 - [docs/kien-truc-va-usecase.md](docs/kien-truc-va-usecase.md) — sơ đồ use case, kiến trúc hệ thống, sequence diagram.
-- [docs/thiet-ke-du-lieu.md](docs/thiet-ke-du-lieu.md) — struct/enum/event/hàm của smart contract.
+- [docs/thiet-ke-du-lieu.md](docs/thiet-ke-du-lieu.md) — struct/enum/event/hàm của 2 smart contract.
 - [docs/gioi-han-va-rui-ro.md](docs/gioi-han-va-rui-ro.md) — giới hạn hiện tại, rủi ro bảo mật, hướng phát triển.
+- [docs/bao-mat-slither.md](docs/bao-mat-slither.md) — kết quả chạy Slither (và sự cố tương thích gặp phải), rà soát bảo mật thủ công thay thế.
+- [docs/production-checklist.md](docs/production-checklist.md) — checklist trước khi lên production/mainnet thật, ghi rõ hạng mục nào chưa làm.
+- [docs/bao-cao-ket-qua.md](docs/bao-cao-ket-qua.md) — báo cáo kết quả tổng hợp: chức năng đã làm, kết quả test, kết quả deploy, giới hạn.
+- [docs/phan-cong-cong-viec.md](docs/phan-cong-cong-viec.md) — phân công công việc.
+- [docs/nhat-ky-su-dung-ai.md](docs/nhat-ky-su-dung-ai.md) — nhật ký sử dụng công cụ AI trong quá trình làm đồ án.
 
 ## Giới hạn & hướng phát triển
 

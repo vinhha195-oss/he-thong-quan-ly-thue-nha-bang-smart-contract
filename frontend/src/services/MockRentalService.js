@@ -66,7 +66,7 @@ export class MockRentalService {
     return this.#account;
   }
 
-  async listProperty({ title, location, rent, deposit }, { onPending } = {}) {
+  async listProperty({ title, location, rent, deposit, imageCID }, { onPending } = {}) {
     const sender = this.#requireAccount();
     const monthlyRent = ethers.parseEther(rent || "0");
     const depositWei = ethers.parseEther(deposit || "0");
@@ -86,6 +86,7 @@ export class MockRentalService {
       tenant: ethers.ZeroAddress,
       depositHeld: 0n,
       rentPaidCount: 0,
+      imageCID: imageCID || "",
     });
     this.#pushHistory({ type: "Đăng tài sản", id, detail: `${title} · ${fmtEth(monthlyRent)}/kỳ · cọc ${fmtEth(depositWei)}` });
   }

@@ -2,13 +2,30 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./RentalAgreementToken.sol";
 
 /// @title RentalManager
 /// @notice He thong quan ly thue nha bang smart contract (ban toi thieu, an toan).
 /// @dev Contract giu tien coc; tien thue chuyen thang cho chu nha.
 ///      Dung ReentrancyGuard + checks-effects-interactions de tranh loi mat tien.
 ///      Thanh toan bang ETH thu nghiem (mang local / testnet).
+///      Khong dung AccessControl cho nghiep vu chinh (listProperty/rentProperty/...)
+///      vi day la thi truong khong can cap phep - ai cung co the dang tin lam chu
+///      nha, quyen han duoc xac dinh bang du lieu (msg.sender == p.landlord) chu
+///      khong phai vai tro duoc admin cap truoc. Chi RentalAgreementToken moi can
+///      AccessControl (MINTER_ROLE) de gioi han quyen mint. Xem docs/lua-chon-token.md.
 contract RentalManager is ReentrancyGuard {
+    RentalAgreementToken public immutable agreementToken;
+
+    error InvalidTokenAddress();
+
+    constructor(address tokenAddress) {
+        if (tokenAddress == address(0)) {
+            revert InvalidTokenAddress();
+        }
+        agreementToken = RentalAgreementToken(tokenAddress);
+    }
+
     // Trang thai vong doi mot tai san/hop dong
     enum Status { Listed, Active, HandedOver, Ended }
     //             Dang cho thue / Dang thue / Da ban giao / Da ket thuc
@@ -24,6 +41,7 @@ contract RentalManager is ReentrancyGuard {
         uint256 depositHeld;
         uint256 startedAt;
         uint256 rentPaidCount;
+        string  imageCID; // CID cua anh phong tren IPFS, co the rong ("") neu khong dinh kem
     }
 
     uint256 public propertyCount;
@@ -39,7 +57,8 @@ contract RentalManager is ReentrancyGuard {
         string calldata title,
         string calldata location,
         uint256 monthlyRent,
-        uint256 deposit
+        uint256 deposit,
+        string calldata imageCID
     ) external returns (uint256) {
         require(monthlyRent > 0, "Tien thue phai > 0");
         propertyCount++;
@@ -53,7 +72,8 @@ contract RentalManager is ReentrancyGuard {
             tenant:       address(0),
             depositHeld:  0,
             startedAt:    0,
-            rentPaidCount:0
+            rentPaidCount:0,
+            imageCID:     imageCID
         });
         emit PropertyListed(propertyCount, msg.sender, title, monthlyRent, deposit);
         return propertyCount;
@@ -72,6 +92,10 @@ contract RentalManager is ReentrancyGuard {
         p.startedAt = block.timestamp;
 
         emit Rented(id, msg.sender, msg.value, block.timestamp);
+
+        // Mint token dai dien cho hop dong thue nay, giao cho nguoi thue.
+        // Goi sau khi da cap nhat xong state (checks-effects-interactions).
+        agreementToken.mintAgreement(msg.sender, id);
     }
 
     function payRent(uint256 id) external payable nonReentrant {

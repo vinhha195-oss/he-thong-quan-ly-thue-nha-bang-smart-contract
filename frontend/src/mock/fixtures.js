@@ -26,6 +26,7 @@ export function createInitialProperties() {
       tenant: ethers.ZeroAddress,
       depositHeld: 0n,
       rentPaidCount: 0,
+      imageCID: "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
     },
     {
       id: 2,
@@ -38,6 +39,7 @@ export function createInitialProperties() {
       tenant: tenant.address,
       depositHeld: eth("1"),
       rentPaidCount: 1,
+      imageCID: "",
     },
     {
       id: 3,
