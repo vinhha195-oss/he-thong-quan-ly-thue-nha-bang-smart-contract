@@ -41,12 +41,12 @@ async function upsertProperty(
     `
     INSERT INTO properties (
       id, landlord, title, location, monthly_rent, deposit,
-      status, tenant, deposit_held, started_at, rent_paid_count, image_cid,
+      status, tenant, deposit_held, started_at, rent_paid_count, image_cid, note,
       updated_block, updated_at
     )
     VALUES (
       @id, @landlord, @title, @location, @monthlyRent, @deposit,
-      @status, @tenant, @depositHeld, @startedAt, @rentPaidCount, @imageCid,
+      @status, @tenant, @depositHeld, @startedAt, @rentPaidCount, @imageCid, @note,
       @updatedBlock, datetime('now')
     )
     ON CONFLICT(id) DO UPDATE SET
@@ -61,6 +61,7 @@ async function upsertProperty(
       started_at = excluded.started_at,
       rent_paid_count = excluded.rent_paid_count,
       image_cid = excluded.image_cid,
+      note = excluded.note,
       updated_block = excluded.updated_block,
       updated_at = datetime('now')
     `,
@@ -77,6 +78,7 @@ async function upsertProperty(
     startedAt: p.startedAt.toString(),
     rentPaidCount: Number(p.rentPaidCount),
     imageCid: p.imageCID,
+    note: p.note,
     updatedBlock,
   });
 }

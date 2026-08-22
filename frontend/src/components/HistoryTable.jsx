@@ -1,8 +1,8 @@
-export function HistoryTable({ history }) {
+export function HistoryTable({ history, onSelectTx }) {
   return (
     <section className="card">
       <h2>Lịch sử giao dịch</h2>
-      <p className="hint">Đọc trực tiếp từ blockchain — không thể chỉnh sửa.</p>
+      <p className="hint">Đọc trực tiếp từ blockchain — không thể chỉnh sửa. Bấm vào 1 dòng để xem chi tiết.</p>
       {history.length === 0 ? (
         <div className="empty-row">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -19,7 +19,7 @@ export function HistoryTable({ history }) {
             </thead>
             <tbody>
               {history.map((h, i) => (
-                <tr key={i}>
+                <tr key={i} className="clickable-row" onClick={() => onSelectTx(h)}>
                   <td className="mono">#{h.block}</td>
                   <td><span className="tag">{h.type}</span></td>
                   <td>#{h.id}</td>

@@ -8,7 +8,7 @@ do, **không đánh dấu ✓ giả**.
 
 | Hạng mục | Trạng thái | Ghi chú |
 |---|---|---|
-| Unit test cho toàn bộ luồng nghiệp vụ chính | ✅ Đã làm | 18 test (`test/RentalManager.test.ts`): đăng tin, đặt cọc, trả tiền, bàn giao, tất toán, CID ảnh IPFS, các trường hợp bị chặn, token đại diện hợp đồng. |
+| Unit test cho toàn bộ luồng nghiệp vụ chính | ✅ Đã làm | 19 test (`test/RentalManager.test.ts`): đăng tin, đặt cọc, trả tiền, bàn giao, tất toán, CID ảnh IPFS, các trường hợp bị chặn, token đại diện hợp đồng. |
 | Test bảo mật riêng (reentrancy, transfer bị chặn) | ✅ Đã làm | Test cả 2 overload `safeTransferFrom` bị chặn; test contract độc hại cố gọi lại `rentProperty` trong `onERC721Received`, xác nhận `nonReentrant` chặn được. |
 | Checks-effects-interactions cho mọi hàm chuyển ETH | ✅ Đã làm | `rentProperty`, `payRent`, `endLease` — state cập nhật trước, gọi ngoài sau. |
 | Custom error thay vì string revert (tiết kiệm gas) | ⚠️ Một phần | `RentalAgreementToken` dùng custom error; `RentalManager` vẫn dùng `require(..., "string")` cho các rule nghiệp vụ chính — chưa đổi vì đổi sẽ ảnh hưởng đến các `revertedWith("...")` hiện có trong frontend/test, không cấp bách cho phạm vi đồ án. |

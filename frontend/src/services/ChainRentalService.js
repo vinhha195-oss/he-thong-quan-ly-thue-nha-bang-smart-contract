@@ -57,6 +57,7 @@ export class ChainRentalService {
       depositHeld: p.depositHeld,
       rentPaidCount: Number(p.rentPaidCount),
       imageCID: p.imageCID,
+      note: p.note,
     }));
   }
 
@@ -69,18 +70,67 @@ export class ChainRentalService {
     const paid = await c.queryFilter(c.filters.RentPaid());
     const handed = await c.queryFilter(c.filters.HandoverConfirmed());
     const ended = await c.queryFilter(c.filters.LeaseEnded());
-    listed.forEach((e) => events.push({ block: e.blockNumber, type: "Đăng tài sản", id: Number(e.args[0]), detail: `${e.args[2]} · ${eth(e.args[3])}/kỳ · cọc ${eth(e.args[4])}` }));
-    rented.forEach((e) => events.push({ block: e.blockNumber, type: "Đặt cọc", id: Number(e.args[0]), detail: `${short(e.args[1])} cọc ${eth(e.args[2])}` }));
-    paid.forEach((e) => events.push({ block: e.blockNumber, type: "Trả tiền thuê", id: Number(e.args[0]), detail: `${short(e.args[1])} trả ${eth(e.args[2])}` }));
-    handed.forEach((e) => events.push({ block: e.blockNumber, type: "Xác nhận bàn giao", id: Number(e.args[0]), detail: `${short(e.args[1])}` }));
-    ended.forEach((e) => events.push({ block: e.blockNumber, type: "Kết thúc", id: Number(e.args[0]), detail: `hoàn ${eth(e.args[1])} · khấu trừ ${eth(e.args[2])}` }));
+
+    // Xay map id -> landlord/tenant tu chinh cac event da co, khong can goi lai
+    // getProperty() (landlord/tenant khong doi sau khi gan, kha nang tin cay du dung).
+    const landlordById = new Map();
+    listed.forEach((e) => landlordById.set(Number(e.args[0]), e.args[1]));
+    const tenantById = new Map();
+    rented.forEach((e) => tenantById.set(Number(e.args[0]), e.args[1]));
+
+    // PropertyListed khong mang timestamp trong event args -> lay tu block.
+    const listedBlocks = await Promise.all(listed.map((e) => e.getBlock()));
+
+    listed.forEach((e, i) => {
+      const id = Number(e.args[0]);
+      events.push({
+        block: e.blockNumber, txHash: e.transactionHash, timestamp: listedBlocks[i].timestamp,
+        type: "Đăng tài sản", id, from: e.args[1], to: null, amount: null,
+        detail: `${e.args[2]} · ${eth(e.args[3])}/kỳ · cọc ${eth(e.args[4])}`,
+        extra: { title: e.args[2], monthlyRent: e.args[3], deposit: e.args[4] },
+      });
+    });
+    rented.forEach((e) => {
+      const id = Number(e.args[0]);
+      events.push({
+        block: e.blockNumber, txHash: e.transactionHash, timestamp: Number(e.args[3]),
+        type: "Đặt cọc", id, from: e.args[1], to: landlordById.get(id) ?? null, amount: e.args[2],
+        detail: `${short(e.args[1])} cọc ${eth(e.args[2])}`, extra: {},
+      });
+    });
+    paid.forEach((e) => {
+      const id = Number(e.args[0]);
+      events.push({
+        block: e.blockNumber, txHash: e.transactionHash, timestamp: Number(e.args[3]),
+        type: "Trả tiền thuê", id, from: e.args[1], to: landlordById.get(id) ?? null, amount: e.args[2],
+        detail: `${short(e.args[1])} trả ${eth(e.args[2])}`, extra: {},
+      });
+    });
+    handed.forEach((e) => {
+      const id = Number(e.args[0]);
+      events.push({
+        block: e.blockNumber, txHash: e.transactionHash, timestamp: Number(e.args[2]),
+        type: "Xác nhận bàn giao", id, from: e.args[1], to: landlordById.get(id) ?? null, amount: null,
+        detail: `${short(e.args[1])}`, extra: {},
+      });
+    });
+    ended.forEach((e) => {
+      const id = Number(e.args[0]);
+      events.push({
+        block: e.blockNumber, txHash: e.transactionHash, timestamp: Number(e.args[3]),
+        type: "Kết thúc", id, from: landlordById.get(id) ?? null, to: tenantById.get(id) ?? null, amount: e.args[1],
+        detail: `hoàn ${eth(e.args[1])} · khấu trừ ${eth(e.args[2])}`,
+        extra: { refundToTenant: e.args[1], deductToLandlord: e.args[2] },
+      });
+    });
+
     events.sort((a, b) => b.block - a.block);
     return events;
   }
 
-  async listProperty({ title, location, rent, deposit, imageCID }, { onPending } = {}) {
+  async listProperty({ title, location, rent, deposit, imageCID, note }, { onPending } = {}) {
     const c = await this.#getContract(true);
-    const t = await c.listProperty(title, location, ethers.parseEther(rent), ethers.parseEther(deposit || "0"), imageCID || "");
+    const t = await c.listProperty(title, location, ethers.parseEther(rent), ethers.parseEther(deposit || "0"), imageCID || "", note || "");
     onPending?.();
     await t.wait();
   }

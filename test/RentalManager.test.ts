@@ -33,7 +33,7 @@ describe("RentalManager", function () {
     // Chu nha dang mot tai san
     await contract
       .connect(landlord)
-      .listProperty("Phong Quan 1", "TP.HCM", rent, deposit, "");
+      .listProperty("Phong Quan 1", "TP.HCM", rent, deposit, "", "");
 
     return { contract, token, landlord, tenant, other };
   }
@@ -166,7 +166,7 @@ describe("RentalManager", function () {
 
     await contract
       .connect(landlord)
-      .listProperty("Phong co anh", "TP.HCM", rent, deposit, cid);
+      .listProperty("Phong co anh", "TP.HCM", rent, deposit, cid, "");
 
     const p = await contract.getProperty(2);
     expect(p.imageCID).to.equal(cid);
@@ -174,6 +174,24 @@ describe("RentalManager", function () {
     // Tai san dang o property #1 (tao trong fixture) khong dinh kem anh -> rong.
     const p1 = await contract.getProperty(1);
     expect(p1.imageCID).to.equal("");
+  });
+
+  it("Luu va tra ve dung ghi chu cua chu nha khi dang tai san", async function () {
+    const { contract, landlord } = await networkHelpers.loadFixture(
+      deployRentalSystemFixture,
+    );
+    const note = "Khong nuoi thu cung, gio giac tu do";
+
+    await contract
+      .connect(landlord)
+      .listProperty("Phong co ghi chu", "TP.HCM", rent, deposit, "", note);
+
+    const p = await contract.getProperty(2);
+    expect(p.note).to.equal(note);
+
+    // Tai san #1 (tao trong fixture) khong co ghi chu -> rong.
+    const p1 = await contract.getProperty(1);
+    expect(p1.note).to.equal("");
   });
 
   it("Chi chu nha moi duoc ket thuc hop dong", async function () {
@@ -282,7 +300,7 @@ describe("RentalManager", function () {
       // Dang them mot tai san thu hai de lam muc tieu tan cong tai lai.
       await contract
         .connect(landlord)
-        .listProperty("Phong Quan 2", "TP.HCM", rent, deposit, "");
+        .listProperty("Phong Quan 2", "TP.HCM", rent, deposit, "", "");
 
       const AttackerFactory = await ethers.getContractFactory(
         "MaliciousReceiver",

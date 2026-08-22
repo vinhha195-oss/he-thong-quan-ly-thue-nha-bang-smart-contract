@@ -49,16 +49,22 @@ CREATE TABLE IF NOT EXISTS properties (
   started_at TEXT NOT NULL,
   rent_paid_count INTEGER NOT NULL,
   image_cid TEXT NOT NULL DEFAULT '',
+  note TEXT NOT NULL DEFAULT '',
   updated_block INTEGER NOT NULL,
   updated_at TEXT NOT NULL
 );
 `);
 
-// Migration nhe cho database da tao truoc khi co cot image_cid (them field CID anh
-// IPFS). "ADD COLUMN IF NOT EXISTS" duoc SQLite ho tro tu 3.35 (2021).
-try {
-  db.exec(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS image_cid TEXT NOT NULL DEFAULT '';`);
-} catch {
-  // Da co cot roi hoac ban SQLite cu hon - bo qua, CREATE TABLE o tren da bao phu
-  // truong hop tao moi.
+// Migration nhe cho database da tao truoc khi co them cot moi (image_cid, note).
+// "ADD COLUMN IF NOT EXISTS" duoc SQLite ho tro tu 3.35 (2021).
+for (const stmt of [
+  `ALTER TABLE properties ADD COLUMN IF NOT EXISTS image_cid TEXT NOT NULL DEFAULT '';`,
+  `ALTER TABLE properties ADD COLUMN IF NOT EXISTS note TEXT NOT NULL DEFAULT '';`,
+]) {
+  try {
+    db.exec(stmt);
+  } catch {
+    // Da co cot roi hoac ban SQLite cu hon - bo qua, CREATE TABLE o tren da bao phu
+    // truong hop tao moi.
+  }
 }

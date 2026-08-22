@@ -15,14 +15,21 @@ import { MockRentalService } from "./MockRentalService.js";
  * @property {bigint} depositHeld  - wei
  * @property {number} rentPaidCount
  * @property {string} imageCID     - CID/URL anh phong tren IPFS, co the rong
+ * @property {string} note         - ghi chu them cua chu nha, co the rong
  */
 
 /**
  * @typedef {Object} HistoryEvent
  * @property {number} block
- * @property {string} type    - nhan hien thi (vd "Đặt cọc")
- * @property {number} id      - id tai san lien quan
- * @property {string} detail
+ * @property {string} txHash
+ * @property {number} timestamp  - unix seconds
+ * @property {string} type       - nhan hien thi (vd "Đặt cọc")
+ * @property {number} id         - id tai san lien quan
+ * @property {string|null} from
+ * @property {string|null} to
+ * @property {bigint|null} amount - wei, null neu su kien khong chuyen tien
+ * @property {string} detail      - chuoi rut gon hien trong bang
+ * @property {Object} extra       - du lieu rieng theo tung loai su kien (xem tung service)
  */
 
 /**
@@ -37,7 +44,7 @@ import { MockRentalService } from "./MockRentalService.js";
  * @property {(cb: (addr: string|null) => void) => (() => void)} onAccountsChanged - dang ky lang nghe doi tai khoan, tra ve ham huy dang ky
  * @property {() => Promise<Property[]>} loadProperties
  * @property {() => Promise<HistoryEvent[]>} loadHistory
- * @property {(input: {title: string, location: string, rent: string, deposit: string, imageCID?: string}) => Promise<void>} listProperty
+ * @property {(input: {title: string, location: string, rent: string, deposit: string, imageCID?: string, note?: string}) => Promise<void>} listProperty
  * @property {(property: Property) => Promise<void>} rentProperty
  * @property {(property: Property) => Promise<void>} payRent
  * @property {(property: Property) => Promise<void>} confirmHandover

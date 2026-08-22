@@ -6,9 +6,9 @@ import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, Typed
   
 export declare namespace RentalManager {
       
-    export type PropertyStruct = {landlord: AddressLike, title: string, location: string, monthlyRent: BigNumberish, deposit: BigNumberish, status: BigNumberish, tenant: AddressLike, depositHeld: BigNumberish, startedAt: BigNumberish, rentPaidCount: BigNumberish, imageCID: string}
+    export type PropertyStruct = {landlord: AddressLike, title: string, location: string, monthlyRent: BigNumberish, deposit: BigNumberish, status: BigNumberish, tenant: AddressLike, depositHeld: BigNumberish, startedAt: BigNumberish, rentPaidCount: BigNumberish, imageCID: string, note: string}
 
-    export type PropertyStructOutput = [landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string] & {landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string }
+    export type PropertyStructOutput = [landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string, note: string] & {landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string, note: string }
   
     }
 
@@ -22,7 +22,7 @@ encodeFunctionData(functionFragment: 'confirmHandover', values: [BigNumberish]):
 encodeFunctionData(functionFragment: 'endLease', values: [BigNumberish, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'getAllProperties', values?: undefined): string;
 encodeFunctionData(functionFragment: 'getProperty', values: [BigNumberish]): string;
-encodeFunctionData(functionFragment: 'listProperty', values: [string, string, BigNumberish, BigNumberish, string]): string;
+encodeFunctionData(functionFragment: 'listProperty', values: [string, string, BigNumberish, BigNumberish, string, string]): string;
 encodeFunctionData(functionFragment: 'payRent', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'properties', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'propertyCount', values?: undefined): string;
@@ -176,7 +176,7 @@ decodeFunctionResult(functionFragment: 'rentProperty', data: BytesLike): Result;
 
     
     listProperty: TypedContractMethod<
-      [title: string, location: string, monthlyRent: BigNumberish, deposit: BigNumberish, imageCID: string, ],
+      [title: string, location: string, monthlyRent: BigNumberish, deposit: BigNumberish, imageCID: string, note: string, ],
       [bigint],
       'nonpayable'
     >
@@ -193,7 +193,7 @@ decodeFunctionResult(functionFragment: 'rentProperty', data: BytesLike): Result;
     
     properties: TypedContractMethod<
       [arg0: BigNumberish, ],
-      [[string, string, string, bigint, bigint, bigint, string, bigint, bigint, bigint, string] & {landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string }],
+      [[string, string, string, bigint, bigint, bigint, string, bigint, bigint, bigint, string, string] & {landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string, note: string }],
       'view'
     >
     
@@ -243,7 +243,7 @@ getFunction(nameOrSignature: 'getProperty'): TypedContractMethod<
       'view'
     >;
 getFunction(nameOrSignature: 'listProperty'): TypedContractMethod<
-      [title: string, location: string, monthlyRent: BigNumberish, deposit: BigNumberish, imageCID: string, ],
+      [title: string, location: string, monthlyRent: BigNumberish, deposit: BigNumberish, imageCID: string, note: string, ],
       [bigint],
       'nonpayable'
     >;
@@ -254,7 +254,7 @@ getFunction(nameOrSignature: 'payRent'): TypedContractMethod<
     >;
 getFunction(nameOrSignature: 'properties'): TypedContractMethod<
       [arg0: BigNumberish, ],
-      [[string, string, string, bigint, bigint, bigint, string, bigint, bigint, bigint, string] & {landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string }],
+      [[string, string, string, bigint, bigint, bigint, string, bigint, bigint, bigint, string, string] & {landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string, note: string }],
       'view'
     >;
 getFunction(nameOrSignature: 'propertyCount'): TypedContractMethod<

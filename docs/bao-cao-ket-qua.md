@@ -31,7 +31,7 @@ Xem chi tiết bài toán, actor, và phạm vi chức năng tại
 | Frontend | ReactJS + Vite, ethers.js v6, MetaMask | Tách UI khỏi nguồn dữ liệu qua lớp `RentalService` (interface chung cho `MockRentalService`/`ChainRentalService`) |
 | Backend | Node.js + TypeScript, Express, `node:sqlite` | Event indexer + REST API, không phải nguồn dữ liệu chính — chỉ là lớp chỉ mục để tra cứu nhanh |
 | Lưu tệp | IPFS (`Property.imageCID`) | Ảnh phòng (không bắt buộc) tham chiếu bằng CID; upload trực tiếp qua Pinata nếu người dùng tự cấu hình `VITE_PINATA_JWT`, hoặc dán CID đã upload sẵn — cùng nguyên tắc với việc tự cấu hình khoá Sepolia |
-| Test | Hardhat Test + Chai (Mocha) | 18 test case |
+| Test | Hardhat Test + Chai (Mocha) | 19 test case |
 | Bảo mật | Slither (gặp giới hạn tương thích) + rà soát thủ công | Xem mục 6 |
 | Quản lý mã nguồn | Git/GitHub | Xem mục 8 |
 
@@ -65,7 +65,7 @@ bản gốc — **frontend không cần sửa gì** khi thêm token vào.
 
 ## 5. Kết quả kiểm thử
 
-Chạy `npx hardhat test` — **18/18 test pass**:
+Chạy `npx hardhat test` — **19/19 test pass**:
 
 ```
 RentalManager
@@ -80,6 +80,7 @@ RentalManager
   ✔ Chan ket thuc khi chua ban giao
   ✔ Chan khau tru vuot qua tien coc
   ✔ Luu va tra ve dung CID anh IPFS khi dang tai san
+  ✔ Luu va tra ve dung ghi chu cua chu nha khi dang tai san
   ✔ Chi chu nha moi duoc ket thuc hop dong
   RentalAgreementToken (token dai dien hop dong thue)
     ✔ Mint token cho nguoi thue khi dat coc thanh cong
@@ -90,7 +91,7 @@ RentalManager
   Bao mat: chong reentrancy khi mint token trong rentProperty
     ✔ Nguoi thue la contract doc hai khong the goi lai rentProperty trong onERC721Received
 
-18 passing (761ms)
+19 passing (751ms)
 ```
 
 Test bao phủ cả nghiệp vụ chính lẫn 2 kịch bản bảo mật riêng: chặn cả hai overload của

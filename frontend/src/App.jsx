@@ -7,6 +7,7 @@ import { Tabs } from "./components/Tabs.jsx";
 import { PropertyForm } from "./components/PropertyForm.jsx";
 import { PropertyList } from "./components/PropertyList.jsx";
 import { HistoryTable } from "./components/HistoryTable.jsx";
+import { TransactionDetailModal } from "./components/TransactionDetailModal.jsx";
 import { Toast } from "./components/Toast.jsx";
 
 function AppShell() {
@@ -16,6 +17,7 @@ function AppShell() {
     connect, listProperty, rentProperty, payRent, confirmHandover, endLease,
   } = useRental();
   const [tab, setTab] = useState("browse");
+  const [selectedTx, setSelectedTx] = useState(null);
 
   return (
     <div className="app">
@@ -39,18 +41,21 @@ function AppShell() {
         {tab === "browse" && (
           <PropertyList
             properties={properties}
+            history={history}
             account={account}
             busy={busy}
             onRent={rentProperty}
             onPay={payRent}
             onHandover={confirmHandover}
             onEnd={endLease}
+            onSelectTx={setSelectedTx}
           />
         )}
 
-        {tab === "history" && <HistoryTable history={history} />}
+        {tab === "history" && <HistoryTable history={history} onSelectTx={setSelectedTx} />}
       </main>
 
+      <TransactionDetailModal event={selectedTx} onClose={() => setSelectedTx(null)} />
       <Toast toast={toast} />
     </div>
   );

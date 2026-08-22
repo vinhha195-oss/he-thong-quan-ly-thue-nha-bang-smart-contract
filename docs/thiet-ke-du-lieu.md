@@ -33,6 +33,7 @@ trước (kiểm tra bằng `require`).
 | `startedAt` | `uint256` | Thời điểm `rentProperty` thành công (block timestamp). |
 | `rentPaidCount` | `uint256` | Số kỳ đã trả tiền thuê thành công. |
 | `imageCID` | `string` | CID (hoặc URL) ảnh phòng lưu trên **IPFS**, có thể rỗng (`""`) nếu chủ nhà không đính kèm ảnh. Contract chỉ lưu chuỗi tham chiếu — file ảnh thật nằm trên IPFS, không lưu on-chain. |
+| `note` | `string` | Ghi chú tự do của chủ nhà (nội quy, lưu ý…), có thể rỗng (`""`). |
 
 `propertyCount` (uint256) và `mapping(uint256 => Property) properties` lưu toàn bộ
 tài sản, id bắt đầu từ 1.
@@ -55,7 +56,7 @@ thanh toán" mà không cần một database off-chain riêng.
 
 | Hàm | Ai gọi được | Điều kiện chặn | Hiệu ứng tiền |
 |---|---|---|---|
-| `listProperty(title, location, monthlyRent, deposit, imageCID)` | Bất kỳ ai (trở thành chủ nhà) | `monthlyRent > 0` | Không chuyển tiền. `imageCID` có thể truyền `""` nếu không có ảnh. |
+| `listProperty(title, location, monthlyRent, deposit, imageCID, note)` | Bất kỳ ai (trở thành chủ nhà) | `monthlyRent > 0` | Không chuyển tiền. `imageCID`/`note` có thể truyền `""` nếu không dùng. |
 | `rentProperty(id)` payable | Bất kỳ ai trừ chủ nhà | tài sản tồn tại; đang `Listed`; `msg.sender != landlord`; `msg.value == deposit` | ETH gửi kèm **ở lại trong contract** (`depositHeld`); đồng thời mint 1 `RentalAgreementToken` với `tokenId = id` cho người thuê. |
 | `payRent(id)` payable | Đúng `tenant` | đang `Active`; `msg.sender == tenant`; `msg.value == monthlyRent` | ETH **chuyển thẳng** cho `landlord` qua `call{value:}`. |
 | `confirmHandover(id)` | Đúng `tenant` | đang `Active`; `msg.sender == tenant` | Không chuyển tiền. |

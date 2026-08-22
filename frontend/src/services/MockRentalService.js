@@ -4,6 +4,11 @@ import { eth as fmtEth } from "../utils/format.js";
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function fakeTxHash() {
+  const bytes = Array.from({ length: 32 }, () => Math.floor(Math.random() * 256));
+  return "0x" + bytes.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 /**
  * Cai dat RentalService bang du lieu mau, in-memory, khong can vi/chain.
  * Moi phuong thuc mo phong LAI DUNG cac require() cua RentalManager.sol
@@ -58,7 +63,15 @@ export class MockRentalService {
   }
 
   #pushHistory(entry) {
-    this.#history.push({ block: this.#nextBlock(), ...entry });
+    this.#history.push({
+      block: this.#nextBlock(),
+      txHash: fakeTxHash(),
+      timestamp: Math.floor(Date.now() / 1000),
+      to: null,
+      amount: null,
+      extra: {},
+      ...entry,
+    });
   }
 
   #requireAccount() {
@@ -66,7 +79,7 @@ export class MockRentalService {
     return this.#account;
   }
 
-  async listProperty({ title, location, rent, deposit, imageCID }, { onPending } = {}) {
+  async listProperty({ title, location, rent, deposit, imageCID, note }, { onPending } = {}) {
     const sender = this.#requireAccount();
     const monthlyRent = ethers.parseEther(rent || "0");
     const depositWei = ethers.parseEther(deposit || "0");
@@ -87,8 +100,13 @@ export class MockRentalService {
       depositHeld: 0n,
       rentPaidCount: 0,
       imageCID: imageCID || "",
+      note: note || "",
     });
-    this.#pushHistory({ type: "Đăng tài sản", id, detail: `${title} · ${fmtEth(monthlyRent)}/kỳ · cọc ${fmtEth(depositWei)}` });
+    this.#pushHistory({
+      type: "Đăng tài sản", id, from: sender,
+      detail: `${title} · ${fmtEth(monthlyRent)}/kỳ · cọc ${fmtEth(depositWei)}`,
+      extra: { title, monthlyRent, deposit: depositWei },
+    });
   }
 
   #find(property) {
@@ -109,7 +127,10 @@ export class MockRentalService {
     p.tenant = sender;
     p.depositHeld = p.deposit;
     p.status = 1;
-    this.#pushHistory({ type: "Đặt cọc", id: p.id, detail: `${sender.slice(0, 6)}…${sender.slice(-4)} cọc ${fmtEth(p.deposit)}` });
+    this.#pushHistory({
+      type: "Đặt cọc", id: p.id, from: sender, to: p.landlord, amount: p.deposit,
+      detail: `${sender.slice(0, 6)}…${sender.slice(-4)} cọc ${fmtEth(p.deposit)}`,
+    });
   }
 
   async payRent(property, { onPending } = {}) {
@@ -121,7 +142,10 @@ export class MockRentalService {
     await delay(500);
 
     p.rentPaidCount += 1;
-    this.#pushHistory({ type: "Trả tiền thuê", id: p.id, detail: `${sender.slice(0, 6)}…${sender.slice(-4)} trả ${fmtEth(p.monthlyRent)}` });
+    this.#pushHistory({
+      type: "Trả tiền thuê", id: p.id, from: sender, to: p.landlord, amount: p.monthlyRent,
+      detail: `${sender.slice(0, 6)}…${sender.slice(-4)} trả ${fmtEth(p.monthlyRent)}`,
+    });
   }
 
   async confirmHandover(property, { onPending } = {}) {
@@ -133,7 +157,10 @@ export class MockRentalService {
     await delay(500);
 
     p.status = 2;
-    this.#pushHistory({ type: "Xác nhận bàn giao", id: p.id, detail: `${sender.slice(0, 6)}…${sender.slice(-4)}` });
+    this.#pushHistory({
+      type: "Xác nhận bàn giao", id: p.id, from: sender, to: p.landlord,
+      detail: `${sender.slice(0, 6)}…${sender.slice(-4)}`,
+    });
   }
 
   async endLease(property, deductEth, { onPending } = {}) {
@@ -149,6 +176,10 @@ export class MockRentalService {
     const refund = p.depositHeld - deductAmount;
     p.depositHeld = 0n;
     p.status = 3;
-    this.#pushHistory({ type: "Kết thúc", id: p.id, detail: `hoàn ${fmtEth(refund)} · khấu trừ ${fmtEth(deductAmount)}` });
+    this.#pushHistory({
+      type: "Kết thúc", id: p.id, from: p.landlord, to: p.tenant, amount: refund,
+      detail: `hoàn ${fmtEth(refund)} · khấu trừ ${fmtEth(deductAmount)}`,
+      extra: { refundToTenant: refund, deductToLandlord: deductAmount },
+    });
   }
 }

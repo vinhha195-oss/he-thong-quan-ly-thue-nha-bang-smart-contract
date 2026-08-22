@@ -42,6 +42,7 @@ contract RentalManager is ReentrancyGuard {
         uint256 startedAt;
         uint256 rentPaidCount;
         string  imageCID; // CID cua anh phong tren IPFS, co the rong ("") neu khong dinh kem
+        string  note; // Ghi chu them cua chu nha (vd noi quy, luu y), co the rong
     }
 
     uint256 public propertyCount;
@@ -58,7 +59,8 @@ contract RentalManager is ReentrancyGuard {
         string calldata location,
         uint256 monthlyRent,
         uint256 deposit,
-        string calldata imageCID
+        string calldata imageCID,
+        string calldata note
     ) external returns (uint256) {
         require(monthlyRent > 0, "Tien thue phai > 0");
         propertyCount++;
@@ -73,7 +75,8 @@ contract RentalManager is ReentrancyGuard {
             depositHeld:  0,
             startedAt:    0,
             rentPaidCount:0,
-            imageCID:     imageCID
+            imageCID:     imageCID,
+            note:         note
         });
         emit PropertyListed(propertyCount, msg.sender, title, monthlyRent, deposit);
         return propertyCount;
