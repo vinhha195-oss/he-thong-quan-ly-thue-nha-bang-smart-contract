@@ -1,5 +1,5 @@
 // File nay duoc tao tu dong boi scripts/sync-frontend-config.ts - KHONG sua tay.
-export const CONTRACT_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+export const CONTRACT_ADDRESS = "0xe1F135B88F9C423CF112b28b94eeb27840F24F9a";
 export const CONTRACT_ABI = [
   {
     "inputs": [
@@ -276,6 +276,16 @@ export const CONTRACT_ABI = [
             "internalType": "uint256",
             "name": "rentPaidCount",
             "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "imageCID",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "note",
+            "type": "string"
           }
         ],
         "internalType": "struct RentalManager.Property[]",
@@ -347,6 +357,16 @@ export const CONTRACT_ABI = [
             "internalType": "uint256",
             "name": "rentPaidCount",
             "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "imageCID",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "note",
+            "type": "string"
           }
         ],
         "internalType": "struct RentalManager.Property",
@@ -378,6 +398,16 @@ export const CONTRACT_ABI = [
         "internalType": "uint256",
         "name": "deposit",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "imageCID",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "note",
+        "type": "string"
       }
     ],
     "name": "listProperty",
@@ -463,6 +493,16 @@ export const CONTRACT_ABI = [
         "internalType": "uint256",
         "name": "rentPaidCount",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "imageCID",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "note",
+        "type": "string"
       }
     ],
     "stateMutability": "view",
