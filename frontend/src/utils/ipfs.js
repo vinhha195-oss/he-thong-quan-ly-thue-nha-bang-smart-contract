@@ -15,7 +15,10 @@
 // THAT, blob: se KHONG duoc dung lam imageCID gui len contract (chi nguoi dang tin
 // trong chinh tab do moi xem duoc, vo nghia voi nguoi khac) — bat buoc phai co CID that.
 
-const GATEWAY = "https://ipfs.io/ipfs/";
+// gateway.pinata.cloud thay vi ipfs.io: anh duoc upload qua Pinata (uploadFileToIpfs
+// ben duoi), va ipfs.io la gateway cong cong hay bi cham/khong phan hoi (kem theo o
+// mot so mang khong truy cap duoc) - dung dung gateway cua Pinata dang tin cay hon.
+const GATEWAY = "https://gateway.pinata.cloud/ipfs/";
 const PINATA_JWT = import.meta.env.VITE_PINATA_JWT || "";
 
 export const canUploadToIpfs = Boolean(PINATA_JWT);
