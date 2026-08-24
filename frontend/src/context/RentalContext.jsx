@@ -24,14 +24,21 @@ export function RentalProvider({ children }) {
   }, []);
 
   const loadData = useCallback(async () => {
+    // Tach rieng 2 loi goi - loadHistory() (vd eth_getLogs) that bai khong duoc
+    // lam mat luon danh sach phong da tai thanh cong tu loadProperties().
     try {
-      const [props, hist] = await Promise.all([service.loadProperties(), service.loadHistory()]);
-      setProperties(props);
-      setHistory(hist);
+      setProperties(await service.loadProperties());
     } catch (e) {
       console.error(e);
+      notify(e.reason || e.shortMessage || e.message, "error");
     }
-  }, [service]);
+    try {
+      setHistory(await service.loadHistory());
+    } catch (e) {
+      console.error(e);
+      notify(e.reason || e.shortMessage || e.message, "error");
+    }
+  }, [service, notify]);
 
   useEffect(() => {
     if (account) loadData();

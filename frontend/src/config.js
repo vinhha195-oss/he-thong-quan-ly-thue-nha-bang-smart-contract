@@ -1,5 +1,6 @@
 // File nay duoc tao tu dong boi scripts/sync-frontend-config.ts - KHONG sua tay.
 export const CONTRACT_ADDRESS = "0x8Ae7a8fE1Ef2C049d74171FB981f24459f3522Cc";
+export const DEPLOYMENT_BLOCK = 11551472;
 export const CONTRACT_ABI = [
   {
     "inputs": [

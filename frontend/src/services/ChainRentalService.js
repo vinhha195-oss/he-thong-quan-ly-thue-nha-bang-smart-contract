@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../config.js";
+import { CONTRACT_ADDRESS, CONTRACT_ABI, DEPLOYMENT_BLOCK } from "../config.js";
 import { short, eth, parseEth } from "../utils/format.js";
 
 /**
@@ -75,14 +75,17 @@ export class ChainRentalService {
     if (!CONTRACT_ABI.length) return [];
     const c = await this.#getContract(false);
     const events = [];
-    const listed = await c.queryFilter(c.filters.PropertyListed());
-    const rented = await c.queryFilter(c.filters.Rented());
-    const paid = await c.queryFilter(c.filters.RentPaid());
-    const handed = await c.queryFilter(c.filters.HandoverConfirmed());
-    const proposed = await c.queryFilter(c.filters.SettlementProposed());
-    const disputed = await c.queryFilter(c.filters.DisputeRaised());
-    const votes = await c.queryFilter(c.filters.DisputeVoteCast());
-    const ended = await c.queryFilter(c.filters.LeaseEnded());
+    // fromBlock = block deploy contract, khong quet tu block 0 - nhieu RPC cong
+    // khai (kem ca RPC mac dinh cua MetaMask) gioi han so block moi lan eth_getLogs
+    // (vd toi da 50000 block), quet tu genesis se bao loi "exceed maximum block range".
+    const listed = await c.queryFilter(c.filters.PropertyListed(), DEPLOYMENT_BLOCK);
+    const rented = await c.queryFilter(c.filters.Rented(), DEPLOYMENT_BLOCK);
+    const paid = await c.queryFilter(c.filters.RentPaid(), DEPLOYMENT_BLOCK);
+    const handed = await c.queryFilter(c.filters.HandoverConfirmed(), DEPLOYMENT_BLOCK);
+    const proposed = await c.queryFilter(c.filters.SettlementProposed(), DEPLOYMENT_BLOCK);
+    const disputed = await c.queryFilter(c.filters.DisputeRaised(), DEPLOYMENT_BLOCK);
+    const votes = await c.queryFilter(c.filters.DisputeVoteCast(), DEPLOYMENT_BLOCK);
+    const ended = await c.queryFilter(c.filters.LeaseEnded(), DEPLOYMENT_BLOCK);
 
     // Xay map id -> landlord/tenant tu chinh cac event da co, khong can goi lai
     // getProperty() (landlord/tenant khong doi sau khi gan, kha nang tin cay du dung).
