@@ -10,23 +10,57 @@ const CLOSE_ICON = (
   </svg>
 );
 
+/** Kiem tra cac o bat buoc - chi bao loi tai dung o, khong xoa noi dung da nhap. */
+function validateForm(form) {
+  const errors = {};
+  if (!form.title.trim()) errors.title = "Vui lòng nhập mô tả phòng";
+
+  const rentNormalized = (form.rent ?? "").toString().trim().replace(",", ".");
+  const rentNum = parseFloat(rentNormalized);
+  if (!rentNormalized) errors.rent = "Vui lòng nhập tiền thuê";
+  else if (Number.isNaN(rentNum) || rentNum <= 0) errors.rent = "Tiền thuê phải là số lớn hơn 0";
+
+  const depositNormalized = (form.deposit ?? "").toString().trim().replace(",", ".");
+  if (depositNormalized) {
+    const depositNum = parseFloat(depositNormalized);
+    if (Number.isNaN(depositNum) || depositNum < 0) errors.deposit = "Tiền cọc không hợp lệ";
+  }
+
+  return errors;
+}
+
 export function PropertyForm({ busy, canSubmit, isMock, onSubmit }) {
   const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
   const [manualCids, setManualCids] = useState("");
   const [images, setImages] = useState([]); // { id, previewUrl, cid, uploading, error }
 
-  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const set = (key) => (e) => {
+    setForm((f) => ({ ...f, [key]: e.target.value }));
+    setErrors((errs) => (errs[key] ? { ...errs, [key]: undefined } : errs));
+  };
 
   const submit = async () => {
+    const fieldErrors = validateForm(form);
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
+
     // Anh da upload IPFS thi dung CID that; anh chua upload (khong loi Pinata) thi o
     // che do mock dung tam URL preview cuc bo (chi song trong tab nay), o che do chain
     // that thi bo qua (khong the ghi 1 link blob: vo nghia vao contract that).
     const fromPicker = images.map((im) => im.cid || (isMock ? im.previewUrl : null));
     const imageCID = joinCIDs([...fromPicker, ...manualCids.split(",")]);
-    await onSubmit({ ...form, imageCID });
-    setForm(EMPTY_FORM);
-    setManualCids("");
-    setImages([]);
+    const ok = await onSubmit({ ...form, imageCID });
+    // Chi xoa form khi giao dich thuc su thanh cong - that bai (vd vi tu choi ky, tx
+    // revert) thi giu nguyen noi dung da nhap, khong bat nguoi dung go lai tu dau.
+    if (ok) {
+      setForm(EMPTY_FORM);
+      setManualCids("");
+      setImages([]);
+    }
   };
 
   const removeImage = (id) => setImages((imgs) => imgs.filter((im) => im.id !== id));
@@ -66,7 +100,13 @@ export function PropertyForm({ busy, canSubmit, isMock, onSubmit }) {
       <p className="hint">Bạn đóng vai chủ nhà. Thông tin sẽ được ghi công khai lên blockchain.</p>
       <label>
         Mô tả phòng
-        <input value={form.title} onChange={set("title")} placeholder="Phòng trọ Quận 1, 25m²" />
+        <input
+          value={form.title}
+          onChange={set("title")}
+          placeholder="Phòng trọ Quận 1, 25m²"
+          className={errors.title ? "field-error" : ""}
+        />
+        {errors.title && <span className="field-error-msg">{errors.title}</span>}
       </label>
       <label>
         Địa chỉ / khu vực
@@ -75,11 +115,23 @@ export function PropertyForm({ busy, canSubmit, isMock, onSubmit }) {
       <div className="row">
         <label>
           Tiền thuê mỗi kỳ (ETH)
-          <input value={form.rent} onChange={set("rent")} placeholder="1" />
+          <input
+            value={form.rent}
+            onChange={set("rent")}
+            placeholder="1"
+            className={errors.rent ? "field-error" : ""}
+          />
+          {errors.rent && <span className="field-error-msg">{errors.rent}</span>}
         </label>
         <label>
           Tiền cọc (ETH)
-          <input value={form.deposit} onChange={set("deposit")} placeholder="2" />
+          <input
+            value={form.deposit}
+            onChange={set("deposit")}
+            placeholder="2"
+            className={errors.deposit ? "field-error" : ""}
+          />
+          {errors.deposit && <span className="field-error-msg">{errors.deposit}</span>}
         </label>
       </div>
 

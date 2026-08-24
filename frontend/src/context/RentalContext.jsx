@@ -68,26 +68,24 @@ export function RentalProvider({ children }) {
     }
   };
 
+  // Tra ve true/false bao hieu giao dich co thanh cong khong - de UI (vd PropertyForm)
+  // biet co nen reset form hay giu nguyen noi dung da nhap khi that bai.
   const runTx = async (fn, okMsg) => {
     setBusy(true);
     try {
       await fn({ onPending: () => notify("Đang xử lý giao dịch…", "info") });
       notify(okMsg, "success");
       await loadData();
+      return true;
     } catch (e) {
       notify(e.reason || e.shortMessage || e.message, "error");
+      return false;
     } finally {
       setBusy(false);
     }
   };
 
-  const listProperty = async (values) => {
-    if (!values.title || !values.rent) {
-      notify("Nhập tối thiểu mô tả và tiền thuê", "error");
-      return;
-    }
-    await runTx((opts) => service.listProperty(values, opts), "Đã đăng tài sản");
-  };
+  const listProperty = (values) => runTx((opts) => service.listProperty(values, opts), "Đã đăng tài sản");
   const rentProperty = (property) => runTx((opts) => service.rentProperty(property, opts), "Đặt cọc thành công");
   const payRent = (property) => runTx((opts) => service.payRent(property, opts), "Đã trả tiền thuê");
   const confirmHandover = (property) => runTx((opts) => service.confirmHandover(property, opts), "Đã xác nhận bàn giao");

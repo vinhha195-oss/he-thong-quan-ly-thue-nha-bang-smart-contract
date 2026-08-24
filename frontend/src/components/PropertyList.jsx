@@ -32,10 +32,14 @@ export function PropertyList({ properties, history, onSelectTx }) {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return properties;
-    return properties.filter(
-      (p) => p.title?.toLowerCase().includes(q) || p.location?.toLowerCase().includes(q),
-    );
+    const matched = q
+      ? properties.filter(
+          (p) => p.title?.toLowerCase().includes(q) || p.location?.toLowerCase().includes(q),
+        )
+      : properties;
+    // Tin moi dang (id lon hon) hien len truoc, khong bat nguoi dung phai luot qua
+    // het cac trang cu moi thay tin vua dang.
+    return [...matched].sort((a, b) => b.id - a.id);
   }, [properties, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));

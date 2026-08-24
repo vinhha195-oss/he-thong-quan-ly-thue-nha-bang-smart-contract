@@ -155,6 +155,9 @@ body {
 .form input:hover { border-color: #cfd3ca; }
 .form input:focus { outline: none; border-color: var(--teal); background: #fff; box-shadow: 0 0 0 3px var(--teal-wash); }
 .form input[type="file"] { padding: 8px 10px; background: #fff; cursor: pointer; }
+.form input.field-error { border-color: var(--rose); background: var(--rose-wash); }
+.form input.field-error:focus { box-shadow: 0 0 0 3px var(--rose-wash); }
+.field-error-msg { display: block; margin-top: 6px; font-size: 12px; font-weight: 500; color: var(--rose); }
 .form textarea {
   display: block; width: 100%; margin-top: 7px; padding: 11px 14px;
   border: 1px solid var(--line); border-radius: 10px; font-size: 14px; font-family: inherit;
