@@ -2,6 +2,24 @@ import { ethers } from "ethers";
 import { CONTRACT_ADDRESS, CONTRACT_ABI, DEPLOYMENT_BLOCK } from "../config.js";
 import { short, eth, parseEth } from "../utils/format.js";
 
+// Nhieu RPC (ke ca RPC mac dinh cua MetaMask cho Sepolia) gioi han so block toi da
+// moi lan eth_getLogs (da gap ca 50000 lan 10000 tuy node) - va khoang cach tu luc
+// deploy den "latest" chi tang dan theo thoi gian, som muon cung vuot gioi han du
+// da tru DEPLOYMENT_BLOCK. Vi vay phai quet theo tung doan nho, khong quet 1 lan.
+const LOG_CHUNK_SIZE = 9000;
+
+async function queryFilterChunked(contract, filter, fromBlock) {
+  const latest = await contract.runner.provider.getBlockNumber();
+  if (fromBlock > latest) return [];
+  const results = [];
+  for (let start = fromBlock; start <= latest; start += LOG_CHUNK_SIZE) {
+    const end = Math.min(start + LOG_CHUNK_SIZE - 1, latest);
+    const chunk = await contract.queryFilter(filter, start, end);
+    results.push(...chunk);
+  }
+  return results;
+}
+
 /**
  * Cai dat RentalService that: goi ethers.js + MetaMask + smart contract da deploy.
  * Day la lop "BE" khi da co contract that; xem RentalService.js de biet interface chung.
@@ -75,17 +93,18 @@ export class ChainRentalService {
     if (!CONTRACT_ABI.length) return [];
     const c = await this.#getContract(false);
     const events = [];
-    // fromBlock = block deploy contract, khong quet tu block 0 - nhieu RPC cong
-    // khai (kem ca RPC mac dinh cua MetaMask) gioi han so block moi lan eth_getLogs
-    // (vd toi da 50000 block), quet tu genesis se bao loi "exceed maximum block range".
-    const listed = await c.queryFilter(c.filters.PropertyListed(), DEPLOYMENT_BLOCK);
-    const rented = await c.queryFilter(c.filters.Rented(), DEPLOYMENT_BLOCK);
-    const paid = await c.queryFilter(c.filters.RentPaid(), DEPLOYMENT_BLOCK);
-    const handed = await c.queryFilter(c.filters.HandoverConfirmed(), DEPLOYMENT_BLOCK);
-    const proposed = await c.queryFilter(c.filters.SettlementProposed(), DEPLOYMENT_BLOCK);
-    const disputed = await c.queryFilter(c.filters.DisputeRaised(), DEPLOYMENT_BLOCK);
-    const votes = await c.queryFilter(c.filters.DisputeVoteCast(), DEPLOYMENT_BLOCK);
-    const ended = await c.queryFilter(c.filters.LeaseEnded(), DEPLOYMENT_BLOCK);
+    // fromBlock = block deploy contract (khong quet tu block 0), va quet theo tung
+    // doan LOG_CHUNK_SIZE block - xem ly do o dinh nghia queryFilterChunked.
+    const [listed, rented, paid, handed, proposed, disputed, votes, ended] = await Promise.all([
+      queryFilterChunked(c, c.filters.PropertyListed(), DEPLOYMENT_BLOCK),
+      queryFilterChunked(c, c.filters.Rented(), DEPLOYMENT_BLOCK),
+      queryFilterChunked(c, c.filters.RentPaid(), DEPLOYMENT_BLOCK),
+      queryFilterChunked(c, c.filters.HandoverConfirmed(), DEPLOYMENT_BLOCK),
+      queryFilterChunked(c, c.filters.SettlementProposed(), DEPLOYMENT_BLOCK),
+      queryFilterChunked(c, c.filters.DisputeRaised(), DEPLOYMENT_BLOCK),
+      queryFilterChunked(c, c.filters.DisputeVoteCast(), DEPLOYMENT_BLOCK),
+      queryFilterChunked(c, c.filters.LeaseEnded(), DEPLOYMENT_BLOCK),
+    ]);
 
     // Xay map id -> landlord/tenant tu chinh cac event da co, khong can goi lai
     // getProperty() (landlord/tenant khong doi sau khi gan, kha nang tin cay du dung).
