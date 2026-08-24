@@ -6,9 +6,12 @@ const { ethers, networkHelpers } = await hre.network.create();
 describe("RentalManager", function () {
   const rent = ethers.parseEther("1"); // 1 ETH/ky
   const deposit = ethers.parseEther("2"); // coc 2 ETH
+  const RENT_PERIOD = 1000n; // giay - ngan de test time-travel nhanh
+  const LATE_FEE_BPS = 500n; // 5%
+  const ARBITER_APPROVALS_REQUIRED = 2n;
 
   async function deployRentalSystemFixture() {
-    const [landlord, tenant, other] = await ethers.getSigners();
+    const [landlord, tenant, other, arbiter2] = await ethers.getSigners();
 
     const TokenFactory = await ethers.getContractFactory(
       "RentalAgreementToken",
@@ -21,6 +24,10 @@ describe("RentalManager", function () {
     const ManagerFactory = await ethers.getContractFactory("RentalManager");
     const contract = await ManagerFactory.connect(landlord).deploy(
       await token.getAddress(),
+      landlord.address,
+      RENT_PERIOD,
+      LATE_FEE_BPS,
+      ARBITER_APPROVALS_REQUIRED,
     );
     await contract.waitForDeployment();
 
@@ -30,12 +37,17 @@ describe("RentalManager", function () {
       .connect(landlord)
       .grantRole(minterRole, await contract.getAddress());
 
+    // landlord la trong tai #1 (admin, tu constructor); cap them arbiter2 lam trong tai #2
+    // de test co che multisig (can du 2 trong tai dong thuan).
+    const arbiterRole = await contract.ARBITER_ROLE();
+    await contract.connect(landlord).grantRole(arbiterRole, arbiter2.address);
+
     // Chu nha dang mot tai san
     await contract
       .connect(landlord)
       .listProperty("Phong Quan 1", "TP.HCM", rent, deposit, "", "");
 
-    return { contract, token, landlord, tenant, other };
+    return { contract, token, landlord, tenant, other, arbiter2 };
   }
 
   it("Chu nha dang tai san thanh cong", async function () {
@@ -60,6 +72,7 @@ describe("RentalManager", function () {
     expect(p.tenant).to.equal(tenant.address);
     expect(p.depositHeld).to.equal(deposit);
     expect(p.status).to.equal(1n); // Active
+    expect(p.nextDueDate).to.equal(p.startedAt + RENT_PERIOD);
   });
 
   it("Chan dat coc sai so tien", async function () {
@@ -96,7 +109,7 @@ describe("RentalManager", function () {
     expect(balance).to.equal(deposit);
   });
 
-  it("Nguoi thue tra tien -> chuyen thang cho chu nha", async function () {
+  it("Nguoi thue tra tien dung han -> chuyen thang cho chu nha, khong bi phat", async function () {
     const { contract, landlord, tenant } = await networkHelpers.loadFixture(
       deployRentalSystemFixture,
     );
@@ -105,6 +118,9 @@ describe("RentalManager", function () {
     await expect(
       contract.connect(tenant).payRent(1, { value: rent }),
     ).to.changeEtherBalance(ethers, landlord, rent);
+
+    const p = await contract.getProperty(1);
+    expect(p.rentPaidCount).to.equal(1n);
   });
 
   it("Chan nguoi la tra tien thue", async function () {
@@ -116,46 +132,6 @@ describe("RentalManager", function () {
     await expect(
       contract.connect(other).payRent(1, { value: rent }),
     ).to.be.revertedWith("Chi nguoi thue moi tra tien");
-  });
-
-  it("Ket thuc hop dong: hoan coc dung sau khi khau tru", async function () {
-    const { contract, landlord, tenant } = await networkHelpers.loadFixture(
-      deployRentalSystemFixture,
-    );
-
-    await contract.connect(tenant).rentProperty(1, { value: deposit });
-    await contract.connect(tenant).confirmHandover(1);
-    const deduct = ethers.parseEther("0.5");
-    // Nguoi thue nhan lai 1.5 ETH (2 - 0.5)
-    await expect(
-      contract.connect(landlord).endLease(1, deduct),
-    ).to.changeEtherBalance(ethers, tenant, deposit - deduct);
-    const p = await contract.getProperty(1);
-    expect(p.status).to.equal(3n); // Ended
-    expect(p.depositHeld).to.equal(0n);
-  });
-
-  it("Chan ket thuc khi chua ban giao", async function () {
-    const { contract, landlord, tenant } = await networkHelpers.loadFixture(
-      deployRentalSystemFixture,
-    );
-
-    await contract.connect(tenant).rentProperty(1, { value: deposit });
-    await expect(
-      contract.connect(landlord).endLease(1, 0n),
-    ).to.be.revertedWith("Chua ban giao phong");
-  });
-
-  it("Chan khau tru vuot qua tien coc", async function () {
-    const { contract, landlord, tenant } = await networkHelpers.loadFixture(
-      deployRentalSystemFixture,
-    );
-
-    await contract.connect(tenant).rentProperty(1, { value: deposit });
-    await contract.connect(tenant).confirmHandover(1);
-    await expect(
-      contract.connect(landlord).endLease(1, ethers.parseEther("3")),
-    ).to.be.revertedWith("Khau tru vuot qua tien coc");
   });
 
   it("Luu va tra ve dung CID anh IPFS khi dang tai san", async function () {
@@ -194,16 +170,179 @@ describe("RentalManager", function () {
     expect(p1.note).to.equal("");
   });
 
-  it("Chi chu nha moi duoc ket thuc hop dong", async function () {
-    const { contract, tenant, other } = await networkHelpers.loadFixture(
-      deployRentalSystemFixture,
-    );
+  describe("Phat thanh toan tre", function () {
+    it("Tra tien qua han bi bat buoc cong them 5% phat", async function () {
+      const { contract, tenant } = await networkHelpers.loadFixture(
+        deployRentalSystemFixture,
+      );
 
-    await contract.connect(tenant).rentProperty(1, { value: deposit });
-    await contract.connect(tenant).confirmHandover(1);
-    await expect(
-      contract.connect(other).endLease(1, 0n),
-    ).to.be.revertedWith("Chi chu nha moi ket thuc");
+      await contract.connect(tenant).rentProperty(1, { value: deposit });
+      await networkHelpers.time.increase(Number(RENT_PERIOD) + 1);
+
+      // Tra dung tien thue (khong kem phat) phai bi tu choi.
+      await expect(
+        contract.connect(tenant).payRent(1, { value: rent }),
+      ).to.be.revertedWith("Phai tra dung tien thue (cong phat tre neu qua han)");
+
+      const penalty = (rent * LATE_FEE_BPS) / 10000n;
+      await expect(
+        contract.connect(tenant).payRent(1, { value: rent + penalty }),
+      ).to.changeEtherBalance(ethers, tenant, -(rent + penalty));
+    });
+
+    it("Han tra tien ky tiep theo tinh tu han cu, khong tinh tu luc tra tre", async function () {
+      const { contract, tenant } = await networkHelpers.loadFixture(
+        deployRentalSystemFixture,
+      );
+
+      await contract.connect(tenant).rentProperty(1, { value: deposit });
+      const before = await contract.getProperty(1);
+
+      await networkHelpers.time.increase(Number(RENT_PERIOD) + 50);
+      const penalty = (rent * LATE_FEE_BPS) / 10000n;
+      await contract.connect(tenant).payRent(1, { value: rent + penalty });
+
+      const after = await contract.getProperty(1);
+      expect(after.nextDueDate).to.equal(before.nextDueDate + RENT_PERIOD);
+    });
+  });
+
+  describe("Tat toan hop dong: de xuat / dong y / khieu nai / trong tai (multisig)", function () {
+    async function handedOverFixture() {
+      const base = await deployRentalSystemFixture();
+      await base.contract.connect(base.tenant).rentProperty(1, { value: deposit });
+      await base.contract.connect(base.tenant).confirmHandover(1);
+      return base;
+    }
+
+    it("Chi chu nha moi de xuat tat toan", async function () {
+      const { contract, other } = await networkHelpers.loadFixture(handedOverFixture);
+
+      await expect(
+        contract.connect(other).proposeSettlement(1, 0n),
+      ).to.be.revertedWith("Chi chu nha moi de xuat");
+    });
+
+    it("Chan de xuat truoc khi ban giao", async function () {
+      const { contract, landlord, tenant } = await networkHelpers.loadFixture(
+        deployRentalSystemFixture,
+      );
+
+      await contract.connect(tenant).rentProperty(1, { value: deposit });
+      await expect(
+        contract.connect(landlord).proposeSettlement(1, 0n),
+      ).to.be.revertedWith("Chua ban giao phong");
+    });
+
+    it("Chan de xuat khau tru vuot qua tien coc", async function () {
+      const { contract, landlord } = await networkHelpers.loadFixture(handedOverFixture);
+
+      await expect(
+        contract.connect(landlord).proposeSettlement(1, ethers.parseEther("3")),
+      ).to.be.revertedWith("Khau tru vuot qua tien coc");
+    });
+
+    it("Nguoi thue dong y de xuat -> tat toan ngay theo dung muc do", async function () {
+      const { contract, landlord, tenant } = await networkHelpers.loadFixture(handedOverFixture);
+      const deduct = ethers.parseEther("0.5");
+
+      await contract.connect(landlord).proposeSettlement(1, deduct);
+      await expect(
+        contract.connect(tenant).acceptSettlement(1),
+      ).to.changeEtherBalance(ethers, tenant, deposit - deduct);
+
+      const p = await contract.getProperty(1);
+      expect(p.status).to.equal(3n); // Ended
+      expect(p.depositHeld).to.equal(0n);
+    });
+
+    it("Chi nguoi thue moi duoc dong y de xuat", async function () {
+      const { contract, landlord, other } = await networkHelpers.loadFixture(handedOverFixture);
+
+      await contract.connect(landlord).proposeSettlement(1, 0n);
+      await expect(
+        contract.connect(other).acceptSettlement(1),
+      ).to.be.revertedWith("Chi nguoi thue moi dong y");
+    });
+
+    it("Nguoi thue khieu nai -> chuyen sang trang thai tranh chap", async function () {
+      const { contract, landlord, tenant } = await networkHelpers.loadFixture(handedOverFixture);
+
+      await contract.connect(landlord).proposeSettlement(1, ethers.parseEther("1"));
+      await contract.connect(tenant).disputeSettlement(1);
+
+      const p = await contract.getProperty(1);
+      expect(p.status).to.equal(4n); // Disputed
+    });
+
+    it("Nguoi khong phai trong tai khong bo phieu duoc", async function () {
+      const { contract, landlord, tenant, other } = await networkHelpers.loadFixture(handedOverFixture);
+
+      await contract.connect(landlord).proposeSettlement(1, ethers.parseEther("1"));
+      await contract.connect(tenant).disputeSettlement(1);
+
+      await expect(
+        contract.connect(other).voteOnDispute(1, ethers.parseEther("0.5")),
+      ).to.be.revertedWithCustomError(contract, "AccessControlUnauthorizedAccount");
+    });
+
+    it("Chi 1 trong tai bo phieu thi chua du nguong, chua tat toan", async function () {
+      const { contract, landlord, tenant } = await networkHelpers.loadFixture(handedOverFixture);
+
+      await contract.connect(landlord).proposeSettlement(1, ethers.parseEther("1"));
+      await contract.connect(tenant).disputeSettlement(1);
+
+      await contract.connect(landlord).voteOnDispute(1, ethers.parseEther("0.5"));
+
+      const p = await contract.getProperty(1);
+      expect(p.status).to.equal(4n); // Van dang Disputed
+    });
+
+    it("Du 2 trong tai dong thuan cung 1 muc -> tu dong tat toan (multisig)", async function () {
+      const { contract, landlord, tenant, arbiter2 } = await networkHelpers.loadFixture(
+        handedOverFixture,
+      );
+      const agreed = ethers.parseEther("0.5");
+
+      await contract.connect(landlord).proposeSettlement(1, ethers.parseEther("1"));
+      await contract.connect(tenant).disputeSettlement(1);
+
+      await contract.connect(landlord).voteOnDispute(1, agreed);
+      await expect(
+        contract.connect(arbiter2).voteOnDispute(1, agreed),
+      ).to.changeEtherBalance(ethers, tenant, deposit - agreed);
+
+      const p = await contract.getProperty(1);
+      expect(p.status).to.equal(3n); // Ended
+      expect(p.depositHeld).to.equal(0n);
+    });
+
+    it("2 trong tai vote khac muc thi khong tu tat toan", async function () {
+      const { contract, landlord, tenant, arbiter2 } = await networkHelpers.loadFixture(
+        handedOverFixture,
+      );
+
+      await contract.connect(landlord).proposeSettlement(1, ethers.parseEther("1"));
+      await contract.connect(tenant).disputeSettlement(1);
+
+      await contract.connect(landlord).voteOnDispute(1, ethers.parseEther("0.5"));
+      await contract.connect(arbiter2).voteOnDispute(1, ethers.parseEther("0.8"));
+
+      const p = await contract.getProperty(1);
+      expect(p.status).to.equal(4n); // Van dang Disputed, chua dong thuan
+    });
+
+    it("Trong tai khong duoc bo phieu 2 lan cho cung 1 tranh chap", async function () {
+      const { contract, landlord, tenant } = await networkHelpers.loadFixture(handedOverFixture);
+
+      await contract.connect(landlord).proposeSettlement(1, ethers.parseEther("1"));
+      await contract.connect(tenant).disputeSettlement(1);
+
+      await contract.connect(landlord).voteOnDispute(1, ethers.parseEther("0.5"));
+      await expect(
+        contract.connect(landlord).voteOnDispute(1, ethers.parseEther("0.5")),
+      ).to.be.revertedWith("Trong tai nay da bo phieu roi");
+    });
   });
 
   describe("RentalAgreementToken (token dai dien hop dong thue)", function () {
@@ -253,7 +392,8 @@ describe("RentalManager", function () {
 
       await contract.connect(tenant).rentProperty(1, { value: deposit });
       await contract.connect(tenant).confirmHandover(1);
-      await contract.connect(landlord).endLease(1, 0n);
+      await contract.connect(landlord).proposeSettlement(1, 0n);
+      await contract.connect(tenant).acceptSettlement(1);
 
       // Hop dong da Ended nhung token van thuoc ve nguoi thue, khong bi burn.
       expect(await token.ownerOf(1n)).to.equal(tenant.address);

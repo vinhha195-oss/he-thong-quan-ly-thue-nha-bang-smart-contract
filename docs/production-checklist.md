@@ -8,15 +8,16 @@ do, **không đánh dấu ✓ giả**.
 
 | Hạng mục | Trạng thái | Ghi chú |
 |---|---|---|
-| Unit test cho toàn bộ luồng nghiệp vụ chính | ✅ Đã làm | 19 test (`test/RentalManager.test.ts`): đăng tin, đặt cọc, trả tiền, bàn giao, tất toán, CID ảnh IPFS, các trường hợp bị chặn, token đại diện hợp đồng. |
+| Unit test cho toàn bộ luồng nghiệp vụ chính | ✅ Đã làm | 28 test (`test/RentalManager.test.ts`): đăng tin, đặt cọc, trả tiền (kèm phạt trễ), bàn giao, đề xuất/đồng ý/khiếu nại/trọng tài bỏ phiếu (multisig), CID ảnh IPFS, các trường hợp bị chặn, token đại diện hợp đồng. |
 | Test bảo mật riêng (reentrancy, transfer bị chặn) | ✅ Đã làm | Test cả 2 overload `safeTransferFrom` bị chặn; test contract độc hại cố gọi lại `rentProperty` trong `onERC721Received`, xác nhận `nonReentrant` chặn được. |
-| Checks-effects-interactions cho mọi hàm chuyển ETH | ✅ Đã làm | `rentProperty`, `payRent`, `endLease` — state cập nhật trước, gọi ngoài sau. |
+| Checks-effects-interactions cho mọi hàm chuyển ETH | ✅ Đã làm | `rentProperty`, `payRent`, `acceptSettlement`, `voteOnDispute` — state cập nhật trước, gọi ngoài sau. |
 | Custom error thay vì string revert (tiết kiệm gas) | ⚠️ Một phần | `RentalAgreementToken` dùng custom error; `RentalManager` vẫn dùng `require(..., "string")` cho các rule nghiệp vụ chính — chưa đổi vì đổi sẽ ảnh hưởng đến các `revertedWith("...")` hiện có trong frontend/test, không cấp bách cho phạm vi đồ án. |
 | Static analysis tự động (Slither) | ❌ Chưa chạy được | Gặp lỗi tương thích `crytic-compile` với định dạng build-info của Hardhat 3, và lỗi resolve import của bản `solc` native trên đường dẫn có Unicode — xem chi tiết và rà soát thủ công thay thế tại [docs/bao-mat-slither.md](./bao-mat-slither.md). |
 | Fuzz / invariant test (Foundry) | ❌ Chưa làm | Không cài Foundry trong lần này (quyết định phạm vi — xem plan: tốn thời gian cài đặt trên Windows không tương xứng lợi ích cho một đồ án). **Cần làm trước khi lên mainnet thật.** |
 | Audit độc lập bên ngoài (bên thứ ba/giảng viên rà soát) | ❌ Chưa có | Đây là việc **con người phải tự thực hiện** (giảng viên/nhóm/bên kiểm toán độc lập), không phải việc code có thể tự làm thay. Rà soát thủ công trong `docs/bao-mat-slither.md` không thay thế được một audit thật. |
 | Cơ chế tạm dừng khẩn cấp (`Pausable`) | ❌ Chưa có | Nếu phát hiện lỗi nghiêm trọng sau khi deploy, hiện không có cách nào tạm dừng hệ thống. Cần thêm `Pausable` + vai trò `PAUSER_ROLE` trước production thật. |
-| Quản trị admin bằng multisig | ❌ Chưa có | `RentalAgreementToken.DEFAULT_ADMIN_ROLE` hiện là một địa chỉ EOA đơn (ví deploy) — rủi ro tập trung quyền lực nếu khoá bị lộ (xem mục #9 trong `bao-mat-slither.md`). Production thật nên chuyển admin sang ví multisig (vd Safe). |
+| Quản trị admin bằng multisig | ❌ Chưa có | `DEFAULT_ADMIN_ROLE` của cả `RentalAgreementToken` lẫn `RentalManager` hiện là một địa chỉ EOA đơn (ví deploy) — rủi ro tập trung quyền lực nếu khoá bị lộ (kẻ tấn công có thể tự cấp `ARBITER_ROLE` cho mình). Production thật nên chuyển admin sang ví multisig (vd Safe). |
+| Time lock cho quyết định trọng tài | ❌ Chưa có | `voteOnDispute` thực thi tất toán **ngay** khi đủ phiếu, không có độ trễ để bên còn lại phản ứng nếu trọng tài thông đồng — xem [gioi-han-va-rui-ro.md § 4](./gioi-han-va-rui-ro.md#4-rủi-ro-còn-tồn-tại--chưa-xử-lý). |
 
 ## 2. Backend / hạ tầng
 
@@ -33,8 +34,8 @@ do, **không đánh dấu ✓ giả**.
 
 | Hạng mục | Trạng thái | Ghi chú |
 |---|---|---|
-| Cơ chế trọng tài khi tranh chấp khấu trừ cọc | ❌ Chưa code | Đã thiết kế hướng giải quyết (`ARBITER_ROLE` + `TimelockController`) tại [docs/gioi-han-va-rui-ro.md](./gioi-han-va-rui-ro.md#41-cơ-chế-trọng-tài-khi-có-tranh-chấp), chưa triển khai. |
 | Giá trị pháp lý của "hợp đồng thuê" on-chain | ❌ Ngoài phạm vi | Token `RentalAgreementToken` chỉ là bằng chứng kỹ thuật số trên chain, không tự động có giá trị pháp lý ngoài đời — cần văn bản giấy/điện tử có chữ ký kèm theo trong triển khai thật. |
+| Trọng tài thật ngoài đời (con người) cho `ARBITER_ROLE` | ❌ Ngoài phạm vi | Contract chỉ cung cấp cơ chế bỏ phiếu on-chain; việc tìm/chỉ định người/tổ chức đóng vai trò trọng tài đáng tin cậy ngoài đời là việc vận hành, không phải việc code. |
 
 ## 4. Kết luận
 

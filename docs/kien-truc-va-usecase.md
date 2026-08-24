@@ -6,13 +6,16 @@
 flowchart LR
     Landlord((Chủ nhà))
     Tenant((Người thuê))
+    Arbiter((Trọng tài))
 
     subgraph RentalManager["Hệ thống quản lý thuê nhà (smart contract)"]
         UC1[Đăng tài sản cho thuê]
         UC2[Đặt cọc / kích hoạt hợp đồng]
-        UC3[Trả tiền thuê định kỳ]
+        UC3[Trả tiền thuê định kỳ\n+ phạt nếu trễ hạn]
         UC4[Xác nhận bàn giao]
-        UC5[Tất toán cọc và kết thúc hợp đồng]
+        UC5[Đề xuất / đồng ý tất toán cọc]
+        UC5b[Khiếu nại khi không đồng ý]
+        UC7[Bỏ phiếu xử lý tranh chấp\nmultisig N-trong-M]
         UC6[Xem lịch sử giao dịch]
     end
 
@@ -22,7 +25,11 @@ flowchart LR
     Tenant --> UC2
     Tenant --> UC3
     Tenant --> UC4
+    Tenant --> UC5
+    Tenant --> UC5b
     Tenant --> UC6
+    Arbiter --> UC7
+    UC5b -.-> UC7
 ```
 
 ## 2. Kiến trúc hệ thống
@@ -43,7 +50,7 @@ flowchart TB
         HistoryTable
     end
 
-    Context["RentalContext (context/RentalContext.jsx)\nstate: account, properties, history, busy, toast\naction: connect, listProperty, rentProperty, payRent,\nconfirmHandover, endLease"]
+    Context["RentalContext (context/RentalContext.jsx)\nstate: account, properties, history, busy, toast, isArbiter\naction: connect, listProperty, rentProperty, payRent,\nconfirmHandover, proposeSettlement, acceptSettlement,\ndisputeSettlement, voteOnDispute"]
 
     Factory["getRentalService() — services/RentalService.js\nchọn service theo VITE_USE_MOCK + CONTRACT_ABI"]
 
@@ -105,20 +112,23 @@ sequenceDiagram
     participant SC as RentalManager.sol
     actor Landlord as Chủ nhà
 
+    Tenant->>Svc: quotePayRent(property) — tính co bi tre han khong
+    Svc-->>Tenant: {total, penalty, isLate}
     Tenant->>Ctx: payRent(property)
     Ctx->>Svc: payRent(property, {onPending})
-    Svc->>SC: payRent(id) kèm value = monthlyRent
-    SC-->>SC: require: hợp đồng Active,\nđúng người thuê, đúng số tiền
+    Svc->>SC: payRent(id) kèm value = monthlyRent (+ phạt nếu quá nextDueDate)
+    SC-->>SC: require: hợp đồng Active, đúng người thuê,\nđúng tổng tiền (gốc + phạt nếu trễ)
     SC->>Landlord: chuyển thẳng ETH cho chủ nhà
-    SC-->>Svc: emit RentPaid
+    SC-->>Svc: emit RentPaid(..., latePenalty, ...)
 ```
 
-### 3.3. Xác nhận bàn giao & tất toán cọc
+### 3.3. Xác nhận bàn giao & tất toán cọc (có trọng tài multisig khi tranh chấp)
 
 ```mermaid
 sequenceDiagram
     actor Tenant as Người thuê
     actor Landlord as Chủ nhà
+    actor Arb as Trọng tài (ARBITER_ROLE)
     participant Ctx as RentalContext
     participant Svc as RentalService
     participant SC as RentalManager.sol
@@ -127,13 +137,37 @@ sequenceDiagram
     Ctx->>Svc: confirmHandover(property)
     Svc->>SC: confirmHandover(id) -> status = HandedOver
 
-    Landlord->>Ctx: endLease(property, deductEth)
-    Ctx->>Svc: endLease(property, deductEth)
-    Svc->>SC: endLease(id, deductAmount)
+    Landlord->>Ctx: proposeSettlement(property, deductEth)
+    Ctx->>Svc: proposeSettlement(property, deductEth)
+    Svc->>SC: proposeSettlement(id, deductAmount)
     SC-->>SC: require: đã bàn giao, đúng chủ nhà,\nkhấu trừ <= tiền cọc đang giữ
-    SC->>Landlord: chuyển phần khấu trừ
-    SC->>Tenant: hoàn phần còn lại
-    SC-->>Svc: emit LeaseEnded -> status = Ended
+    SC-->>Svc: emit SettlementProposed
+
+    alt Người thuê đồng ý
+        Tenant->>Ctx: acceptSettlement(property)
+        Ctx->>Svc: acceptSettlement(property)
+        Svc->>SC: acceptSettlement(id)
+        SC->>Landlord: chuyển phần khấu trừ
+        SC->>Tenant: hoàn phần còn lại
+        SC-->>Svc: emit LeaseEnded -> status = Ended
+    else Người thuê khiếu nại
+        Tenant->>Ctx: disputeSettlement(property)
+        Ctx->>Svc: disputeSettlement(property)
+        Svc->>SC: disputeSettlement(id) -> status = Disputed
+        SC-->>Svc: emit DisputeRaised
+
+        loop Từng trọng tài bỏ phiếu
+            Arb->>Ctx: voteOnDispute(property, deductEth)
+            Ctx->>Svc: voteOnDispute(property, deductEth)
+            Svc->>SC: voteOnDispute(id, deductAmount)
+            SC-->>SC: require: co ARBITER_ROLE,\nchua vote lan nao cho tranh chap nay
+            SC-->>Svc: emit DisputeVoteCast
+        end
+        Note over SC: Khi đủ arbiterApprovalsRequired phiếu\ncùng 1 mức -> tự động tất toán (_settle)
+        SC->>Landlord: chuyển phần khấu trừ
+        SC->>Tenant: hoàn phần còn lại
+        SC-->>Svc: emit LeaseEnded -> status = Ended
+    end
 ```
 
 ## 4. Lựa chọn service (mock ↔ chain)

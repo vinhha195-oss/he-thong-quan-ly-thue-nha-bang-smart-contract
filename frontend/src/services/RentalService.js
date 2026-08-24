@@ -10,12 +10,15 @@ import { MockRentalService } from "./MockRentalService.js";
  * @property {string} location
  * @property {bigint} monthlyRent  - wei
  * @property {bigint} deposit      - wei
- * @property {number} status       - 0 Listed, 1 Active, 2 HandedOver, 3 Ended
+ * @property {number} status       - 0 Listed, 1 Active, 2 HandedOver, 3 Ended, 4 Disputed
  * @property {string} tenant
  * @property {bigint} depositHeld  - wei
  * @property {number} rentPaidCount
  * @property {string} imageCID     - CID/URL anh phong tren IPFS, co the rong
  * @property {string} note         - ghi chu them cua chu nha, co the rong
+ * @property {bigint} nextDueDate  - unix seconds, han tra tien ky tiep theo
+ * @property {bigint} proposedDeduction - wei, muc khau tru chu nha de xuat khi tat toan
+ * @property {boolean} settlementProposed - da co de xuat tat toan dang cho phan hoi
  */
 
 /**
@@ -46,9 +49,14 @@ import { MockRentalService } from "./MockRentalService.js";
  * @property {() => Promise<HistoryEvent[]>} loadHistory
  * @property {(input: {title: string, location: string, rent: string, deposit: string, imageCID?: string, note?: string}) => Promise<void>} listProperty
  * @property {(property: Property) => Promise<void>} rentProperty
+ * @property {(property: Property) => Promise<{total: bigint, penalty: bigint, isLate: boolean}>} quotePayRent
  * @property {(property: Property) => Promise<void>} payRent
  * @property {(property: Property) => Promise<void>} confirmHandover
- * @property {(property: Property, deductEth: string) => Promise<void>} endLease
+ * @property {(property: Property, deductEth: string) => Promise<void>} proposeSettlement
+ * @property {(property: Property) => Promise<void>} acceptSettlement
+ * @property {(property: Property) => Promise<void>} disputeSettlement
+ * @property {(property: Property, deductEth: string) => Promise<void>} voteOnDispute
+ * @property {(address: string) => Promise<boolean>} isArbiter
  */
 
 let cachedService = null;

@@ -14,7 +14,7 @@ function AppShell() {
   const {
     isMock, isConfigured, mockAccounts, switchMockAccount,
     account, properties, history, busy, toast,
-    connect, listProperty, rentProperty, payRent, confirmHandover, endLease,
+    connect, listProperty,
   } = useRental();
   const [tab, setTab] = useState("browse");
   const [selectedTx, setSelectedTx] = useState(null);
@@ -42,12 +42,6 @@ function AppShell() {
           <PropertyList
             properties={properties}
             history={history}
-            account={account}
-            busy={busy}
-            onRent={rentProperty}
-            onPay={payRent}
-            onHandover={confirmHandover}
-            onEnd={endLease}
             onSelectTx={setSelectedTx}
           />
         )}

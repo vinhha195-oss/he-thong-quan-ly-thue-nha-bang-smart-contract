@@ -55,8 +55,9 @@ yếu chính:
       người thuê trong cùng giao dịch
 - [x] Thanh toán tiền thuê định kỳ (`payRent`)
 - [x] Xác nhận bàn giao (`confirmHandover`)
-- [x] Hoàn hoặc khấu trừ tiền đặt cọc + kết thúc hợp đồng (`endLease`, gộp chung vì
-      khấu trừ luôn xảy ra tại thời điểm kết thúc)
+- [x] Hoàn hoặc khấu trừ tiền đặt cọc + kết thúc hợp đồng (`proposeSettlement` →
+      `acceptSettlement`, hoặc → `disputeSettlement` → `voteOnDispute` nếu tranh chấp —
+      xem mục 4.5)
 - [x] Theo dõi lịch sử thanh toán (đọc trực tiếp từ event trên blockchain, tab "Lịch sử")
 
 ### 4.2. Token & tách kiến trúc (Bước 0–2 của quy trình)
@@ -81,14 +82,21 @@ yếu chính:
 - [x] Checklist production ghi rõ hạng mục còn thiếu, không tick giả — xem
       [production-checklist.md](./production-checklist.md)
 
-## 5. Phạm vi chưa triển khai (chức năng nâng cao — hướng phát triển)
+### 4.5. Chức năng nâng cao theo đề bài
 
-Ba chức năng nâng cao theo đề bài — **cơ chế trọng tài khi tranh chấp**, **phạt thanh
-toán trễ**, **multisig cho giải ngân tiền cọc** — **chưa** được code ở phiên bản này để
-tập trung hoàn thiện kiến trúc tách UI/BE và bám sát quy trình token trước. Xem hướng
-thiết kế đề xuất (đặc biệt là multisig dùng OpenZeppelin `AccessControl` +
-`TimelockController`) tại
-[gioi-han-va-rui-ro.md](./gioi-han-va-rui-ro.md#hướng-phát-triển). Các hạng mục còn
-thiếu khác cho production thật (Foundry fuzz test, audit độc lập, `Pausable`, multisig
-admin, PostgreSQL) được liệt kê đầy đủ tại
+- [x] **Cơ chế trọng tài khi có tranh chấp**: `proposeSettlement` → `acceptSettlement`
+      (đồng ý) hoặc `disputeSettlement` (khiếu nại) → `voteOnDispute` (trọng tài xử lý).
+      Chi tiết luồng và lý do thiết kế: [gioi-han-va-rui-ro.md § 3.1](./gioi-han-va-rui-ro.md#31-cơ-chế-trọng-tài-khi-có-tranh-chấp-multisig-cho-giải-ngân-tiền-cọc).
+- [x] **Phạt thanh toán trễ**: `payRent` bắt buộc cộng thêm phần trăm phạt
+      (`lateFeeBps`, mặc định 5%) nếu gọi sau `nextDueDate`. Chi tiết:
+      [gioi-han-va-rui-ro.md § 3.2](./gioi-han-va-rui-ro.md#32-phạt-thanh-toán-trễ).
+- [x] **Multisig cho giải ngân tiền cọc**: khi tranh chấp, cần đủ số trọng tài
+      (`arbiterApprovalsRequired`, mặc định 2) **độc lập đồng thuận cùng 1 mức khấu
+      trừ** mới thi hành — không dùng `TimelockController` (đề xuất ban đầu) mà đếm
+      phiếu trực tiếp on-chain, đơn giản hơn và không cần contract phụ trợ. Đánh đổi:
+      không có độ trễ thời gian giữa lúc đủ phiếu và lúc thực thi — xem
+      [gioi-han-va-rui-ro.md § 4](./gioi-han-va-rui-ro.md#4-rủi-ro-còn-tồn-tại--chưa-xử-lý).
+
+Các hạng mục còn thiếu cho production thật (Foundry fuzz test, audit độc lập,
+`Pausable`, multisig admin, PostgreSQL) được liệt kê đầy đủ tại
 [production-checklist.md](./production-checklist.md).

@@ -5,7 +5,7 @@ import { PropertyActions } from "./PropertyActions.jsx";
 import { PropertyGallery } from "./PropertyGallery.jsx";
 import { StatusBadge } from "./StatusBadge.jsx";
 
-export function PropertyDetailModal({ property: p, history, account, busy, onClose, onRent, onPay, onHandover, onEnd, onSelectTx }) {
+export function PropertyDetailModal({ property: p, history, onClose, onSelectTx }) {
   if (!p) return null;
   const ownHistory = (history || []).filter((h) => h.id === p.id);
 
@@ -39,9 +39,10 @@ export function PropertyDetailModal({ property: p, history, account, busy, onClo
         <div><span>Người thuê</span><div className="addr-row"><Avatar address={p.tenant} size={18} /><b className="mono">{short(p.tenant)}</b></div></div>
         <div><span>Số kỳ đã trả</span><b>{p.rentPaidCount}</b></div>
         <div><span>Cọc đang giữ</span><b>{eth(p.depositHeld)}</b></div>
+        {p.status === 1 && <div><span>Hạn trả tiếp theo</span><b>{dateTime(p.nextDueDate)}</b></div>}
       </div>
 
-      <PropertyActions property={p} account={account} busy={busy} onRent={onRent} onPay={onPay} onHandover={onHandover} onEnd={onEnd} />
+      <PropertyActions property={p} />
 
       {ownHistory.length > 0 && (
         <div className="detail-history">

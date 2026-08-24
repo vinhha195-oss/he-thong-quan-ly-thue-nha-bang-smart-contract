@@ -16,6 +16,7 @@ export function RentalProvider({ children }) {
   const [history, setHistory] = useState([]);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
+  const [isArbiter, setIsArbiter] = useState(false);
 
   const notify = useCallback((msg, type = "info") => {
     setToast({ msg, type });
@@ -44,6 +45,12 @@ export function RentalProvider({ children }) {
   useEffect(() => {
     return service.onAccountsChanged((addr) => setAccount(addr));
   }, [service]);
+
+  useEffect(() => {
+    let cancelled = false;
+    service.isArbiter(account).then((v) => { if (!cancelled) setIsArbiter(v); });
+    return () => { cancelled = true; };
+  }, [service, account]);
 
   const connect = async () => {
     try {
@@ -77,7 +84,15 @@ export function RentalProvider({ children }) {
   const rentProperty = (property) => runTx((opts) => service.rentProperty(property, opts), "Đặt cọc thành công");
   const payRent = (property) => runTx((opts) => service.payRent(property, opts), "Đã trả tiền thuê");
   const confirmHandover = (property) => runTx((opts) => service.confirmHandover(property, opts), "Đã xác nhận bàn giao");
-  const endLease = (property, deductEth) => runTx((opts) => service.endLease(property, deductEth, opts), "Đã kết thúc hợp đồng và tất toán cọc");
+  const proposeSettlement = (property, deductEth) =>
+    runTx((opts) => service.proposeSettlement(property, deductEth, opts), "Đã đề xuất mức tất toán");
+  const acceptSettlement = (property) =>
+    runTx((opts) => service.acceptSettlement(property, opts), "Đã đồng ý tất toán");
+  const disputeSettlement = (property) =>
+    runTx((opts) => service.disputeSettlement(property, opts), "Đã gửi khiếu nại, chờ trọng tài xử lý");
+  const voteOnDispute = (property, deductEth) =>
+    runTx((opts) => service.voteOnDispute(property, deductEth, opts), "Đã ghi nhận phiếu bầu của trọng tài");
+  const quotePayRent = (property) => service.quotePayRent(property);
 
   const value = {
     isMock: service.isMock,
@@ -89,12 +104,17 @@ export function RentalProvider({ children }) {
     history,
     busy,
     toast,
+    isArbiter,
     connect,
     listProperty,
     rentProperty,
     payRent,
+    quotePayRent,
     confirmHandover,
-    endLease,
+    proposeSettlement,
+    acceptSettlement,
+    disputeSettlement,
+    voteOnDispute,
   };
 
   return <RentalContext.Provider value={value}>{children}</RentalContext.Provider>;

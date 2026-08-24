@@ -9,6 +9,9 @@ const BUSINESS_EVENTS = new Set([
   "Rented",
   "RentPaid",
   "HandoverConfirmed",
+  "SettlementProposed",
+  "DisputeRaised",
+  "DisputeVoteCast",
   "LeaseEnded",
 ]);
 
@@ -42,11 +45,13 @@ async function upsertProperty(
     INSERT INTO properties (
       id, landlord, title, location, monthly_rent, deposit,
       status, tenant, deposit_held, started_at, rent_paid_count, image_cid, note,
+      next_due_date, proposed_deduction, settlement_proposed,
       updated_block, updated_at
     )
     VALUES (
       @id, @landlord, @title, @location, @monthlyRent, @deposit,
       @status, @tenant, @depositHeld, @startedAt, @rentPaidCount, @imageCid, @note,
+      @nextDueDate, @proposedDeduction, @settlementProposed,
       @updatedBlock, datetime('now')
     )
     ON CONFLICT(id) DO UPDATE SET
@@ -62,6 +67,9 @@ async function upsertProperty(
       rent_paid_count = excluded.rent_paid_count,
       image_cid = excluded.image_cid,
       note = excluded.note,
+      next_due_date = excluded.next_due_date,
+      proposed_deduction = excluded.proposed_deduction,
+      settlement_proposed = excluded.settlement_proposed,
       updated_block = excluded.updated_block,
       updated_at = datetime('now')
     `,
@@ -79,6 +87,9 @@ async function upsertProperty(
     rentPaidCount: Number(p.rentPaidCount),
     imageCid: p.imageCID,
     note: p.note,
+    nextDueDate: p.nextDueDate.toString(),
+    proposedDeduction: p.proposedDeduction.toString(),
+    settlementProposed: p.settlementProposed ? 1 : 0,
     updatedBlock,
   });
 }
@@ -101,7 +112,7 @@ function processLog(log: Log): ProcessedEvent | null {
     return null;
   }
 
-  // Ca 5 event nghiep vu deu co "id" (property id) la tham so dau tien.
+  // Tat ca event nghiep vu deu co "id" (property id) la tham so dau tien.
   const propertyId = parsed.args[0] as bigint;
 
   const payload = Object.fromEntries(

@@ -14,7 +14,7 @@ viết test, xây dựng frontend/backend, rà soát bảo mật, viết tài li
 |---|---|---|
 | Phân tích & thiết kế | Phân tích bài toán, chọn actor, chọn loại token, thiết kế use case/kiến trúc, thiết kế dữ liệu | [phan-tich-bai-toan.md](./phan-tich-bai-toan.md), [lua-chon-token.md](./lua-chon-token.md), [kien-truc-va-usecase.md](./kien-truc-va-usecase.md), [thiet-ke-du-lieu.md](./thiet-ke-du-lieu.md) |
 | Smart contract | Viết `RentalAgreementToken.sol` (ERC-721 không chuyển nhượng) và `RentalManager.sol` (nghiệp vụ thuê nhà), áp dụng `ReentrancyGuard` + checks-effects-interactions | `contracts/RentalAgreementToken.sol`, `contracts/RentalManager.sol` |
-| Test | Viết 19 test case (nghiệp vụ + token + IPFS CID + bảo mật: chặn `safeTransferFrom`, chặn reentrancy qua contract độc hại) | `test/RentalManager.test.ts`, `contracts/mocks/MaliciousReceiver.sol` |
+| Test | Viết 28 test case (nghiệp vụ + token + IPFS CID + phạt trễ hạn + trọng tài/multisig + bảo mật: chặn `safeTransferFrom`, chặn reentrancy qua contract độc hại) | `test/RentalManager.test.ts`, `contracts/mocks/MaliciousReceiver.sol` |
 | Triển khai (deploy) | Viết Hardhat Ignition module, deploy local + hướng dẫn deploy Sepolia bằng Hardhat keystore | `ignition/modules/RentalSystem.ts`, `README.md` |
 | Frontend | Thiết kế kiến trúc tách UI/BE (service layer `RentalService` dùng chung cho mock và chain), xây UI React kết nối MetaMask | `frontend/src/` (`services/`, `context/`, `components/`) |
 | Backend | Xây event indexer đọc blockchain + REST API tra cứu nhanh (SQLite) | `backend/src/` |

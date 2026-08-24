@@ -37,19 +37,20 @@ const TEMPLATES = [
   { title: "Phòng trọ Vũng Tàu", location: "Bà Rịa - Vũng Tàu", rent: "1", deposit: "2", note: "", image: null },
   {
     title: "Căn hộ Ninh Kiều", location: "Cần Thơ", rent: "1.6", deposit: "3.2", note: "",
-    image: null, status: 1, rentPaidCount: 2,
+    image: null, status: 1, rentPaidCount: 2, dueOffset: 120, // con han
   },
   {
     title: "Phòng trọ Quận 5, gần ĐH", location: "TP. Hồ Chí Minh", rent: "1.1", deposit: "2.2", note: "Ưu tiên sinh viên.",
-    image: 0, status: 1, rentPaidCount: 1,
+    image: 0, status: 1, rentPaidCount: 1, dueOffset: -500, // da qua han -> demo phat tre ngay
   },
   {
     title: "Căn hộ Quận 10", location: "TP. Hồ Chí Minh", rent: "2.8", deposit: "5.6", note: "",
     image: 1, status: 2, rentPaidCount: 3,
+    settlementProposed: true, proposedDeductionEth: "0.5", // demo UI dong y / khieu nai
   },
   {
     title: "Nhà nguyên căn Biên Hòa", location: "Đồng Nai", rent: "3.5", deposit: "7", note: "Sân rộng, để được ô tô.",
-    image: null, status: 2, rentPaidCount: 2,
+    image: null, status: 2, rentPaidCount: 2, // chua co de xuat -> demo UI "chu nha de xuat tat toan"
   },
   {
     title: "Phòng trọ Thủ Dầu Một", location: "Bình Dương", rent: "0.8", deposit: "1.6", note: "",
@@ -58,6 +59,7 @@ const TEMPLATES = [
 ];
 
 export function createInitialProperties() {
+  const now = Math.floor(Date.now() / 1000);
   return TEMPLATES.map((t, i) => {
     const id = i + 1;
     const status = t.status ?? 0;
@@ -82,6 +84,9 @@ export function createInitialProperties() {
             ? t.image.map((i) => SAMPLE_IMAGES[i]).join(",")
             : SAMPLE_IMAGES[t.image],
       note: t.note,
+      nextDueDate: isRented ? BigInt(now + (t.dueOffset ?? 120)) : 0n,
+      proposedDeduction: t.proposedDeductionEth ? eth(t.proposedDeductionEth) : 0n,
+      settlementProposed: t.settlementProposed ?? false,
     };
   });
 }

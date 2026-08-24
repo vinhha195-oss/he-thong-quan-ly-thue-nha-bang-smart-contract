@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../config.js";
-import { short, eth } from "../utils/format.js";
+import { short, eth, parseEth } from "../utils/format.js";
 
 /**
  * Cai dat RentalService that: goi ethers.js + MetaMask + smart contract da deploy.
@@ -41,6 +41,13 @@ export class ChainRentalService {
     return () => window.ethereum.removeListener?.("accountsChanged", handler);
   }
 
+  async isArbiter(address) {
+    if (!address || !CONTRACT_ABI.length) return false;
+    const c = await this.#getContract(false);
+    const role = await c.ARBITER_ROLE();
+    return c.hasRole(role, address);
+  }
+
   async loadProperties() {
     if (!CONTRACT_ABI.length) return [];
     const c = await this.#getContract(false);
@@ -58,6 +65,9 @@ export class ChainRentalService {
       rentPaidCount: Number(p.rentPaidCount),
       imageCID: p.imageCID,
       note: p.note,
+      nextDueDate: p.nextDueDate,
+      proposedDeduction: p.proposedDeduction,
+      settlementProposed: p.settlementProposed,
     }));
   }
 
@@ -69,6 +79,9 @@ export class ChainRentalService {
     const rented = await c.queryFilter(c.filters.Rented());
     const paid = await c.queryFilter(c.filters.RentPaid());
     const handed = await c.queryFilter(c.filters.HandoverConfirmed());
+    const proposed = await c.queryFilter(c.filters.SettlementProposed());
+    const disputed = await c.queryFilter(c.filters.DisputeRaised());
+    const votes = await c.queryFilter(c.filters.DisputeVoteCast());
     const ended = await c.queryFilter(c.filters.LeaseEnded());
 
     // Xay map id -> landlord/tenant tu chinh cac event da co, khong can goi lai
@@ -78,8 +91,11 @@ export class ChainRentalService {
     const tenantById = new Map();
     rented.forEach((e) => tenantById.set(Number(e.args[0]), e.args[1]));
 
-    // PropertyListed khong mang timestamp trong event args -> lay tu block.
+    // PropertyListed/SettlementProposed/DisputeVoteCast khong mang timestamp trong
+    // event args -> lay tu block.
     const listedBlocks = await Promise.all(listed.map((e) => e.getBlock()));
+    const proposedBlocks = await Promise.all(proposed.map((e) => e.getBlock()));
+    const voteBlocks = await Promise.all(votes.map((e) => e.getBlock()));
 
     listed.forEach((e, i) => {
       const id = Number(e.args[0]);
@@ -100,10 +116,12 @@ export class ChainRentalService {
     });
     paid.forEach((e) => {
       const id = Number(e.args[0]);
+      const [, tenantAddr, amount, latePenalty, paidAt] = e.args;
       events.push({
-        block: e.blockNumber, txHash: e.transactionHash, timestamp: Number(e.args[3]),
-        type: "Trả tiền thuê", id, from: e.args[1], to: landlordById.get(id) ?? null, amount: e.args[2],
-        detail: `${short(e.args[1])} trả ${eth(e.args[2])}`, extra: {},
+        block: e.blockNumber, txHash: e.transactionHash, timestamp: Number(paidAt),
+        type: "Trả tiền thuê", id, from: tenantAddr, to: landlordById.get(id) ?? null, amount,
+        detail: `${short(tenantAddr)} trả ${eth(amount)}${latePenalty > 0n ? ` (kèm phạt trễ ${eth(latePenalty)})` : ""}`,
+        extra: { latePenalty },
       });
     });
     handed.forEach((e) => {
@@ -112,6 +130,31 @@ export class ChainRentalService {
         block: e.blockNumber, txHash: e.transactionHash, timestamp: Number(e.args[2]),
         type: "Xác nhận bàn giao", id, from: e.args[1], to: landlordById.get(id) ?? null, amount: null,
         detail: `${short(e.args[1])}`, extra: {},
+      });
+    });
+    proposed.forEach((e, i) => {
+      const id = Number(e.args[0]);
+      events.push({
+        block: e.blockNumber, txHash: e.transactionHash, timestamp: proposedBlocks[i].timestamp,
+        type: "Đề xuất tất toán", id, from: landlordById.get(id) ?? null, to: null, amount: e.args[1],
+        detail: `Đề xuất khấu trừ ${eth(e.args[1])}`, extra: { proposedDeduction: e.args[1] },
+      });
+    });
+    disputed.forEach((e) => {
+      const id = Number(e.args[0]);
+      events.push({
+        block: e.blockNumber, txHash: e.transactionHash, timestamp: null,
+        type: "Khiếu nại", id, from: e.args[1], to: null, amount: null,
+        detail: `${short(e.args[1])} không đồng ý mức đề xuất`, extra: {},
+      });
+    });
+    votes.forEach((e, i) => {
+      const id = Number(e.args[0]);
+      events.push({
+        block: e.blockNumber, txHash: e.transactionHash, timestamp: voteBlocks[i].timestamp,
+        type: "Trọng tài bỏ phiếu", id, from: e.args[1], to: null, amount: e.args[2],
+        detail: `${short(e.args[1])} đề xuất khấu trừ ${eth(e.args[2])} (phiếu ${e.args[3]})`,
+        extra: { voteCount: e.args[3] },
       });
     });
     ended.forEach((e) => {
@@ -130,7 +173,7 @@ export class ChainRentalService {
 
   async listProperty({ title, location, rent, deposit, imageCID, note }, { onPending } = {}) {
     const c = await this.#getContract(true);
-    const t = await c.listProperty(title, location, ethers.parseEther(rent), ethers.parseEther(deposit || "0"), imageCID || "", note || "");
+    const t = await c.listProperty(title, location, parseEth(rent), parseEth(deposit), imageCID || "", note || "");
     onPending?.();
     await t.wait();
   }
@@ -142,9 +185,19 @@ export class ChainRentalService {
     await t.wait();
   }
 
+  /** Tinh tong tien phai tra cho ky nay (kem phat tre neu qua han) - dung de hien thi + gui giao dich. */
+  async quotePayRent(property) {
+    const c = await this.#getContract(false);
+    const lateFeeBps = await c.lateFeeBps();
+    const isLate = Math.floor(Date.now() / 1000) > Number(property.nextDueDate);
+    const penalty = isLate ? (property.monthlyRent * lateFeeBps) / 10000n : 0n;
+    return { total: property.monthlyRent + penalty, penalty, isLate };
+  }
+
   async payRent(property, { onPending } = {}) {
     const c = await this.#getContract(true);
-    const t = await c.payRent(property.id, { value: property.monthlyRent });
+    const { total } = await this.quotePayRent(property);
+    const t = await c.payRent(property.id, { value: total });
     onPending?.();
     await t.wait();
   }
@@ -156,9 +209,30 @@ export class ChainRentalService {
     await t.wait();
   }
 
-  async endLease(property, deductEth, { onPending } = {}) {
+  async proposeSettlement(property, deductEth, { onPending } = {}) {
     const c = await this.#getContract(true);
-    const t = await c.endLease(property.id, ethers.parseEther(deductEth || "0"));
+    const t = await c.proposeSettlement(property.id, parseEth(deductEth));
+    onPending?.();
+    await t.wait();
+  }
+
+  async acceptSettlement(property, { onPending } = {}) {
+    const c = await this.#getContract(true);
+    const t = await c.acceptSettlement(property.id);
+    onPending?.();
+    await t.wait();
+  }
+
+  async disputeSettlement(property, { onPending } = {}) {
+    const c = await this.#getContract(true);
+    const t = await c.disputeSettlement(property.id);
+    onPending?.();
+    await t.wait();
+  }
+
+  async voteOnDispute(property, deductEth, { onPending } = {}) {
+    const c = await this.#getContract(true);
+    const t = await c.voteOnDispute(property.id, parseEth(deductEth));
     onPending?.();
     await t.wait();
   }

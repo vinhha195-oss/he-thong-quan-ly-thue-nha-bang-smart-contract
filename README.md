@@ -27,6 +27,7 @@ rental-dapp/
 │   └── RentalAgreementToken.sol     # ERC-721 không chuyển nhượng, đại diện 1 hợp đồng thuê
 ├── ignition/modules/RentalSystem.ts # Triển khai 2 contract + cấp MINTER_ROLE (Hardhat Ignition)
 ├── scripts/sync-frontend-config.ts  # Đọc dia chỉ đã deploy, ghi sang frontend/src/config.js
+├── scripts/grant-arbiter.ts         # Cấp ARBITER_ROLE cho 1 địa chỉ (multisig cần ≥2 trọng tài)
 ├── test/RentalManager.test.ts       # Bộ test TypeScript (Hardhat 3 + Mocha)
 ├── hardhat.config.ts                # Mạng: localhost + sepolia (bí mật qua Hardhat keystore)
 ├── backend/                         # Event indexer + REST API (SQLite) — tuỳ chọn, xem Bước 4
@@ -192,6 +193,19 @@ tay commit lên GitHub:
 > Xem lại giá trị đã lưu: `npx hardhat keystore list`. Xoá một giá trị: `npx hardhat
 > keystore delete <TÊN_BIẾN>`.
 
+### Cấp thêm trọng tài (`ARBITER_ROLE`) sau khi deploy
+
+Mặc định lúc deploy chỉ ví admin (ví dùng để deploy) có `ARBITER_ROLE`, trong khi cơ chế
+multisig cần `arbiterApprovalsRequired` trọng tài **độc lập** (mặc định 2) mới tất toán
+được khi có tranh chấp — cần cấp thêm ít nhất 1 địa chỉ khác:
+
+```bash
+ARBITER_ADDRESS=0xDiaChiViKhac npx hardhat run scripts/grant-arbiter.ts --network sepolia
+```
+
+(Đổi `--network sepolia` thành `--network localhost` nếu đang test trên máy.) Có thể
+gọi lại nhiều lần với các địa chỉ khác nhau để có nhiều trọng tài.
+
 ---
 
 ## Deploy frontend lên Vercel (tự động deploy lại mỗi khi push)
@@ -232,19 +246,68 @@ Vercel mới nhận được địa chỉ contract mới.
 
 ---
 
-## Kịch bản demo (5–10 phút)
+## Kịch bản demo (5–10 phút) — 2 trình duyệt, dữ liệu thật trên Sepolia
 
-1. **Chủ nhà (Account #0)** → tab *Đăng cho thuê* → nhập "Phòng Quận 1", tiền thuê `1`, cọc `2` → **Đăng tài sản**.
-2. Chuyển MetaMask sang **Người thuê (Account #1)** → tab *Danh sách phòng* → **Đặt cọc & thuê**.
-   Chú ý: 2 ETH bị khóa trong hợp đồng, không vào ví chủ nhà.
-3. Vẫn là người thuê → **Trả tiền thuê** (1 ETH chảy thẳng sang ví chủ nhà).
-4. Người thuê → **Xác nhận bàn giao**.
-5. Chuyển về **Chủ nhà** → **Tất toán cọc & kết thúc**, nhập khấu trừ `0.5` →
-   hệ thống tự hoàn 1.5 ETH cho người thuê, chuyển 0.5 ETH cho chủ nhà.
-6. Mở tab *Lịch sử* → toàn bộ giao dịch hiện ra, đọc trực tiếp từ blockchain.
+Dùng khi đã deploy thật lên Sepolia và trang Vercel đang ở "Chế độ: Blockchain" (xem
+mục deploy ở trên). Mở **2 trình duyệt khác nhau** (hoặc 1 trình duyệt thường + 1
+cửa sổ ẩn danh), mỗi bên đăng nhập MetaMask bằng **1 ví Sepolia riêng có sẵn SepETH**:
 
-**Điểm nhấn chống gian lận** (nói khi demo): thử để một tài khoản thứ ba trả tiền thuê,
-hoặc khấu trừ vượt quá cọc → hệ thống chặn ngay. Luật hợp đồng được thực thi tự động.
+- **Trình duyệt A = Chủ nhà**
+- **Trình duyệt B = Người thuê**
+
+Cả 2 đều mở link Vercel, đảm bảo MetaMask đang chọn đúng mạng **Sepolia**.
+
+> Vì đây là ETH thật trên testnet (không phải mạng local vô hạn như trước), dùng số
+> tiền **nhỏ** để tiết kiệm SepETH cho nhiều lần test — vd tiền thuê `0.001`, cọc
+> `0.002`. Mỗi hành động đều tốn thêm 1 khoản phí gas nhỏ (~0.0001–0.0005 ETH),
+> MetaMask sẽ hiện popup xác nhận cho mọi giao dịch — nhớ bấm **Confirm**.
+
+1. **[A] Chủ nhà** → tab *Đăng cho thuê* → điền: mô tả phòng, khu vực, tiền thuê
+   `0.001`, cọc `0.002` — có thể thêm ảnh (chọn file) và ghi chú để demo đủ tính
+   năng → **Đăng tài sản** → xác nhận giao dịch trên MetaMask.
+2. **[B] Người thuê** → tab *Danh sách phòng* → dùng ô tìm kiếm nếu cần → bấm vào
+   phòng vừa tạo để xem chi tiết (ảnh, ghi chú, đầy đủ thông tin) → **Đặt cọc &
+   thuê** → xác nhận trên MetaMask. Chú ý: 0.002 ETH bị khóa trong hợp đồng, chưa
+   vào ví chủ nhà.
+3. **[B] Người thuê** → **Trả tiền thuê** (0.001 ETH chảy thẳng sang ví chủ nhà,
+   kiểm tra số dư ví A tăng lên ngay).
+4. **[B] Người thuê** → **Xác nhận bàn giao**.
+5. **[A] Chủ nhà** → mở lại phòng đó → **Đề xuất tất toán**, nhập khấu trừ `0.0005`.
+6. Chọn 1 trong 2 nhánh để demo:
+   - **Đồng ý ngay**: **[B] Người thuê** → bấm **Đồng ý khấu trừ 0.0005 ETH** → hệ
+     thống tự hoàn `0.0015` ETH cho người thuê, chuyển `0.0005` ETH cho chủ nhà, kết
+     thúc hợp đồng.
+   - **Khiếu nại (demo trọng tài + multisig)**: **[B] Người thuê** → bấm **Khiếu
+     nại** → trạng thái chuyển "Đang tranh chấp". Cần ≥2 trọng tài độc lập bỏ phiếu
+     **cùng 1 mức khấu trừ** mới tất toán (xem mục "Cấp thêm trọng tài" ở trên để
+     cấp `ARBITER_ROLE` cho 1 ví thứ 2 trước khi demo). Mở thêm 1–2 trình duyệt là
+     trọng tài → tab đó bấm **Bỏ phiếu trọng tài**, nhập cùng 1 mức (vd `0.0005`) ở
+     mỗi trình duyệt → khi đủ số phiếu, hợp đồng tự động tất toán ngay lập tức,
+     không cần ai bấm thêm nút nào khác.
+7. Mở tab *Lịch sử* (ở mọi trình duyệt đều thấy giống nhau, vì đọc chung 1
+   blockchain) → bấm vào từng dòng để xem chi tiết giao dịch (ví gửi/nhận, thời
+   gian thật, số tiền, mã giao dịch).
+
+**Điểm nhấn chống gian lận** (nói khi demo): mở thêm 1 ví thứ ba (không phải chủ nhà,
+không phải trọng tài), thử trả tiền thuê hộ, tự bỏ phiếu trọng tài khi không có
+`ARBITER_ROLE`, hoặc đề xuất tất toán khi chưa bàn giao → hệ thống chặn ngay bằng lỗi
+từ smart contract, không cần ai kiểm duyệt thủ công. Cũng có thể thử khấu trừ vượt quá
+tiền cọc để thấy giao dịch bị từ chối.
+
+**Phạt thanh toán trễ**: mặc định `rentPeriod` là 30 ngày thật nên không demo trực
+tiếp trên Sepolia trong vài phút được — nhưng có thể chứng minh bằng bộ test tự động
+(`npx hardhat test`, mục "Phạt thanh toán tre" dùng time-travel để mô phỏng quá hạn),
+hoặc deploy 1 bản Sepolia riêng cho demo với `rentPeriod` ngắn (vài phút) bằng file
+tham số Ignition, vd `params.json`:
+```json
+{ "RentalSystemModule": { "rentPeriodSeconds": 300 } }
+```
+rồi `npx hardhat ignition deploy ignition/modules/RentalSystem.ts --network sepolia --build-profile default --parameters params.json`.
+
+**Xác minh độc lập trên Etherscan** (chứng minh dữ liệu thật, không phải giả lập):
+mở `https://sepolia.etherscan.io/address/<địa chỉ RentalManager>` → thấy toàn bộ
+giao dịch vừa thực hiện, người gửi/nhận, số ETH — trùng khớp với những gì hiện trên
+web.
 
 ---
 
@@ -254,8 +317,10 @@ hoặc khấu trừ vượt quá cọc → hệ thống chặn ngay. Luật hợ
 npx hardhat test
 ```
 
-Bộ test kiểm tra: đặt cọc đúng/sai số tiền, tiền cọc do contract giữ, trả tiền chuyển đúng
-chủ nhà, hoàn/khấu trừ cọc chính xác, và chặn các trường hợp gian lận.
+Bộ test (28 test case) kiểm tra: đặt cọc đúng/sai số tiền, tiền cọc do contract giữ, trả
+tiền chuyển đúng chủ nhà, phạt trả trễ (dùng time-travel mô phỏng quá hạn), luồng đề
+xuất/đồng ý/khiếu nại/trọng tài bỏ phiếu (multisig N-trong-M), và chặn các trường hợp
+gian lận.
 
 ---
 
@@ -274,7 +339,9 @@ chủ nhà, hoàn/khấu trừ cọc chính xác, và chặn các trường hợ
 
 ## Giới hạn & hướng phát triển
 
-Bản hiện tại để chủ nhà quyết mức khấu trừ cọc (có bước người thuê xác nhận bàn giao trước
-để tăng công bằng). Hướng phát triển: cơ chế trọng tài khi tranh chấp, phạt thanh toán trễ,
-và multisig cho việc giải ngân tiền cọc (thiết kế đề xuất dùng OpenZeppelin `AccessControl`
-+ `TimelockController`) — xem chi tiết tại [docs/gioi-han-va-rui-ro.md](docs/gioi-han-va-rui-ro.md).
+Cả 3 chức năng nâng cao theo đề bài đã triển khai: cơ chế trọng tài khi tranh chấp,
+phạt thanh toán trễ, và multisig cho việc giải ngân tiền cọc (`ARBITER_ROLE` +
+đếm phiếu N-trong-M on-chain, thay cho `TimelockController` được đề xuất ban đầu — đơn
+giản hơn, không cần contract phụ trợ). Giới hạn còn lại (time lock cho quyết định
+trọng tài, multisig cho ví admin, audit độc lập...) — xem chi tiết tại
+[docs/gioi-han-va-rui-ro.md](docs/gioi-han-va-rui-ro.md).

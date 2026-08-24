@@ -6,41 +6,97 @@ import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, Typed
   
 export declare namespace RentalManager {
       
-    export type PropertyStruct = {landlord: AddressLike, title: string, location: string, monthlyRent: BigNumberish, deposit: BigNumberish, status: BigNumberish, tenant: AddressLike, depositHeld: BigNumberish, startedAt: BigNumberish, rentPaidCount: BigNumberish, imageCID: string, note: string}
+    export type PropertyStruct = {landlord: AddressLike, title: string, location: string, monthlyRent: BigNumberish, deposit: BigNumberish, status: BigNumberish, tenant: AddressLike, depositHeld: BigNumberish, startedAt: BigNumberish, rentPaidCount: BigNumberish, imageCID: string, note: string, nextDueDate: BigNumberish, proposedDeduction: BigNumberish, settlementProposed: boolean}
 
-    export type PropertyStructOutput = [landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string, note: string] & {landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string, note: string }
+    export type PropertyStructOutput = [landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string, note: string, nextDueDate: bigint, proposedDeduction: bigint, settlementProposed: boolean] & {landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string, note: string, nextDueDate: bigint, proposedDeduction: bigint, settlementProposed: boolean }
   
     }
 
   export interface RentalManagerInterface extends Interface {
-    getFunction(nameOrSignature: "agreementToken" | "confirmHandover" | "endLease" | "getAllProperties" | "getProperty" | "listProperty" | "payRent" | "properties" | "propertyCount" | "rentProperty"): FunctionFragment;
+    getFunction(nameOrSignature: "ARBITER_ROLE" | "DEFAULT_ADMIN_ROLE" | "acceptSettlement" | "agreementToken" | "arbiterApprovalsRequired" | "confirmHandover" | "disputeSettlement" | "disputeVotes" | "getAllProperties" | "getProperty" | "getRoleAdmin" | "grantRole" | "hasRole" | "hasVotedOnDispute" | "lateFeeBps" | "listProperty" | "payRent" | "properties" | "propertyCount" | "proposeSettlement" | "renounceRole" | "rentPeriod" | "rentProperty" | "revokeRole" | "supportsInterface" | "voteOnDispute"): FunctionFragment;
 
-    getEvent(nameOrSignatureOrTopic: "HandoverConfirmed" | "LeaseEnded" | "PropertyListed" | "RentPaid" | "Rented"): EventFragment;
+    getEvent(nameOrSignatureOrTopic: "DisputeRaised" | "DisputeVoteCast" | "HandoverConfirmed" | "LeaseEnded" | "PropertyListed" | "RentPaid" | "Rented" | "RoleAdminChanged" | "RoleGranted" | "RoleRevoked" | "SettlementProposed"): EventFragment;
 
-    encodeFunctionData(functionFragment: 'agreementToken', values?: undefined): string;
+    encodeFunctionData(functionFragment: 'ARBITER_ROLE', values?: undefined): string;
+encodeFunctionData(functionFragment: 'DEFAULT_ADMIN_ROLE', values?: undefined): string;
+encodeFunctionData(functionFragment: 'acceptSettlement', values: [BigNumberish]): string;
+encodeFunctionData(functionFragment: 'agreementToken', values?: undefined): string;
+encodeFunctionData(functionFragment: 'arbiterApprovalsRequired', values?: undefined): string;
 encodeFunctionData(functionFragment: 'confirmHandover', values: [BigNumberish]): string;
-encodeFunctionData(functionFragment: 'endLease', values: [BigNumberish, BigNumberish]): string;
+encodeFunctionData(functionFragment: 'disputeSettlement', values: [BigNumberish]): string;
+encodeFunctionData(functionFragment: 'disputeVotes', values: [BigNumberish, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'getAllProperties', values?: undefined): string;
 encodeFunctionData(functionFragment: 'getProperty', values: [BigNumberish]): string;
+encodeFunctionData(functionFragment: 'getRoleAdmin', values: [BytesLike]): string;
+encodeFunctionData(functionFragment: 'grantRole', values: [BytesLike, AddressLike]): string;
+encodeFunctionData(functionFragment: 'hasRole', values: [BytesLike, AddressLike]): string;
+encodeFunctionData(functionFragment: 'hasVotedOnDispute', values: [BigNumberish, AddressLike]): string;
+encodeFunctionData(functionFragment: 'lateFeeBps', values?: undefined): string;
 encodeFunctionData(functionFragment: 'listProperty', values: [string, string, BigNumberish, BigNumberish, string, string]): string;
 encodeFunctionData(functionFragment: 'payRent', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'properties', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'propertyCount', values?: undefined): string;
+encodeFunctionData(functionFragment: 'proposeSettlement', values: [BigNumberish, BigNumberish]): string;
+encodeFunctionData(functionFragment: 'renounceRole', values: [BytesLike, AddressLike]): string;
+encodeFunctionData(functionFragment: 'rentPeriod', values?: undefined): string;
 encodeFunctionData(functionFragment: 'rentProperty', values: [BigNumberish]): string;
+encodeFunctionData(functionFragment: 'revokeRole', values: [BytesLike, AddressLike]): string;
+encodeFunctionData(functionFragment: 'supportsInterface', values: [BytesLike]): string;
+encodeFunctionData(functionFragment: 'voteOnDispute', values: [BigNumberish, BigNumberish]): string;
 
-    decodeFunctionResult(functionFragment: 'agreementToken', data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: 'ARBITER_ROLE', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'DEFAULT_ADMIN_ROLE', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'acceptSettlement', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'agreementToken', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'arbiterApprovalsRequired', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'confirmHandover', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'endLease', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'disputeSettlement', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'disputeVotes', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'getAllProperties', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'getProperty', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'getRoleAdmin', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'grantRole', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'hasRole', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'hasVotedOnDispute', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'lateFeeBps', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'listProperty', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'payRent', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'properties', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'propertyCount', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'proposeSettlement', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'renounceRole', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'rentPeriod', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'rentProperty', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'revokeRole', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'supportsInterface', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'voteOnDispute', data: BytesLike): Result;
   }
 
   
+    export namespace DisputeRaisedEvent {
+      export type InputTuple = [id: BigNumberish, tenant: AddressLike];
+      export type OutputTuple = [id: bigint, tenant: string];
+      export interface OutputObject {id: bigint, tenant: string };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace DisputeVoteCastEvent {
+      export type InputTuple = [id: BigNumberish, arbiter: AddressLike, deductAmount: BigNumberish, voteCount: BigNumberish];
+      export type OutputTuple = [id: bigint, arbiter: string, deductAmount: bigint, voteCount: bigint];
+      export interface OutputObject {id: bigint, arbiter: string, deductAmount: bigint, voteCount: bigint };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
     export namespace HandoverConfirmedEvent {
       export type InputTuple = [id: BigNumberish, tenant: AddressLike, confirmedAt: BigNumberish];
       export type OutputTuple = [id: bigint, tenant: string, confirmedAt: bigint];
@@ -78,9 +134,9 @@ decodeFunctionResult(functionFragment: 'rentProperty', data: BytesLike): Result;
   
 
     export namespace RentPaidEvent {
-      export type InputTuple = [id: BigNumberish, tenant: AddressLike, amount: BigNumberish, paidAt: BigNumberish];
-      export type OutputTuple = [id: bigint, tenant: string, amount: bigint, paidAt: bigint];
-      export interface OutputObject {id: bigint, tenant: string, amount: bigint, paidAt: bigint };
+      export type InputTuple = [id: BigNumberish, tenant: AddressLike, amount: BigNumberish, latePenalty: BigNumberish, paidAt: BigNumberish];
+      export type OutputTuple = [id: bigint, tenant: string, amount: bigint, latePenalty: bigint, paidAt: bigint];
+      export interface OutputObject {id: bigint, tenant: string, amount: bigint, latePenalty: bigint, paidAt: bigint };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -93,6 +149,54 @@ decodeFunctionResult(functionFragment: 'rentProperty', data: BytesLike): Result;
       export type InputTuple = [id: BigNumberish, tenant: AddressLike, depositPaid: BigNumberish, startedAt: BigNumberish];
       export type OutputTuple = [id: bigint, tenant: string, depositPaid: bigint, startedAt: bigint];
       export interface OutputObject {id: bigint, tenant: string, depositPaid: bigint, startedAt: bigint };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace RoleAdminChangedEvent {
+      export type InputTuple = [role: BytesLike, previousAdminRole: BytesLike, newAdminRole: BytesLike];
+      export type OutputTuple = [role: string, previousAdminRole: string, newAdminRole: string];
+      export interface OutputObject {role: string, previousAdminRole: string, newAdminRole: string };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace RoleGrantedEvent {
+      export type InputTuple = [role: BytesLike, account: AddressLike, sender: AddressLike];
+      export type OutputTuple = [role: string, account: string, sender: string];
+      export interface OutputObject {role: string, account: string, sender: string };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace RoleRevokedEvent {
+      export type InputTuple = [role: BytesLike, account: AddressLike, sender: AddressLike];
+      export type OutputTuple = [role: string, account: string, sender: string];
+      export interface OutputObject {role: string, account: string, sender: string };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace SettlementProposedEvent {
+      export type InputTuple = [id: BigNumberish, deductAmount: BigNumberish];
+      export type OutputTuple = [id: bigint, deductAmount: bigint];
+      export interface OutputObject {id: bigint, deductAmount: bigint };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -135,9 +239,41 @@ decodeFunctionResult(functionFragment: 'rentProperty', data: BytesLike): Result;
 
     
     
+    ARBITER_ROLE: TypedContractMethod<
+      [],
+      [string],
+      'view'
+    >
+    
+
+    
+    DEFAULT_ADMIN_ROLE: TypedContractMethod<
+      [],
+      [string],
+      'view'
+    >
+    
+
+    
+    acceptSettlement: TypedContractMethod<
+      [id: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
     agreementToken: TypedContractMethod<
       [],
       [string],
+      'view'
+    >
+    
+
+    
+    arbiterApprovalsRequired: TypedContractMethod<
+      [],
+      [bigint],
       'view'
     >
     
@@ -151,10 +287,18 @@ decodeFunctionResult(functionFragment: 'rentProperty', data: BytesLike): Result;
     
 
     
-    endLease: TypedContractMethod<
-      [id: BigNumberish, deductAmount: BigNumberish, ],
+    disputeSettlement: TypedContractMethod<
+      [id: BigNumberish, ],
       [void],
       'nonpayable'
+    >
+    
+
+    
+    disputeVotes: TypedContractMethod<
+      [arg0: BigNumberish, arg1: BigNumberish, ],
+      [bigint],
+      'view'
     >
     
 
@@ -170,6 +314,46 @@ decodeFunctionResult(functionFragment: 'rentProperty', data: BytesLike): Result;
     getProperty: TypedContractMethod<
       [id: BigNumberish, ],
       [RentalManager.PropertyStructOutput],
+      'view'
+    >
+    
+
+    
+    getRoleAdmin: TypedContractMethod<
+      [role: BytesLike, ],
+      [string],
+      'view'
+    >
+    
+
+    
+    grantRole: TypedContractMethod<
+      [role: BytesLike, account: AddressLike, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
+    hasRole: TypedContractMethod<
+      [role: BytesLike, account: AddressLike, ],
+      [boolean],
+      'view'
+    >
+    
+
+    
+    hasVotedOnDispute: TypedContractMethod<
+      [arg0: BigNumberish, arg1: AddressLike, ],
+      [boolean],
+      'view'
+    >
+    
+
+    
+    lateFeeBps: TypedContractMethod<
+      [],
+      [bigint],
       'view'
     >
     
@@ -193,13 +377,37 @@ decodeFunctionResult(functionFragment: 'rentProperty', data: BytesLike): Result;
     
     properties: TypedContractMethod<
       [arg0: BigNumberish, ],
-      [[string, string, string, bigint, bigint, bigint, string, bigint, bigint, bigint, string, string] & {landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string, note: string }],
+      [[string, string, string, bigint, bigint, bigint, string, bigint, bigint, bigint, string, string, bigint, bigint, boolean] & {landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string, note: string, nextDueDate: bigint, proposedDeduction: bigint, settlementProposed: boolean }],
       'view'
     >
     
 
     
     propertyCount: TypedContractMethod<
+      [],
+      [bigint],
+      'view'
+    >
+    
+
+    
+    proposeSettlement: TypedContractMethod<
+      [id: BigNumberish, deductAmount: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
+    renounceRole: TypedContractMethod<
+      [role: BytesLike, callerConfirmation: AddressLike, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
+    rentPeriod: TypedContractMethod<
       [],
       [bigint],
       'view'
@@ -214,12 +422,56 @@ decodeFunctionResult(functionFragment: 'rentProperty', data: BytesLike): Result;
     >
     
 
+    
+    revokeRole: TypedContractMethod<
+      [role: BytesLike, account: AddressLike, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
+    supportsInterface: TypedContractMethod<
+      [interfaceId: BytesLike, ],
+      [boolean],
+      'view'
+    >
+    
+
+    
+    voteOnDispute: TypedContractMethod<
+      [id: BigNumberish, deductAmount: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >
+    
+
 
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T;
 
-    getFunction(nameOrSignature: 'agreementToken'): TypedContractMethod<
+    getFunction(nameOrSignature: 'ARBITER_ROLE'): TypedContractMethod<
       [],
       [string],
+      'view'
+    >;
+getFunction(nameOrSignature: 'DEFAULT_ADMIN_ROLE'): TypedContractMethod<
+      [],
+      [string],
+      'view'
+    >;
+getFunction(nameOrSignature: 'acceptSettlement'): TypedContractMethod<
+      [id: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'agreementToken'): TypedContractMethod<
+      [],
+      [string],
+      'view'
+    >;
+getFunction(nameOrSignature: 'arbiterApprovalsRequired'): TypedContractMethod<
+      [],
+      [bigint],
       'view'
     >;
 getFunction(nameOrSignature: 'confirmHandover'): TypedContractMethod<
@@ -227,10 +479,15 @@ getFunction(nameOrSignature: 'confirmHandover'): TypedContractMethod<
       [void],
       'nonpayable'
     >;
-getFunction(nameOrSignature: 'endLease'): TypedContractMethod<
-      [id: BigNumberish, deductAmount: BigNumberish, ],
+getFunction(nameOrSignature: 'disputeSettlement'): TypedContractMethod<
+      [id: BigNumberish, ],
       [void],
       'nonpayable'
+    >;
+getFunction(nameOrSignature: 'disputeVotes'): TypedContractMethod<
+      [arg0: BigNumberish, arg1: BigNumberish, ],
+      [bigint],
+      'view'
     >;
 getFunction(nameOrSignature: 'getAllProperties'): TypedContractMethod<
       [],
@@ -240,6 +497,31 @@ getFunction(nameOrSignature: 'getAllProperties'): TypedContractMethod<
 getFunction(nameOrSignature: 'getProperty'): TypedContractMethod<
       [id: BigNumberish, ],
       [RentalManager.PropertyStructOutput],
+      'view'
+    >;
+getFunction(nameOrSignature: 'getRoleAdmin'): TypedContractMethod<
+      [role: BytesLike, ],
+      [string],
+      'view'
+    >;
+getFunction(nameOrSignature: 'grantRole'): TypedContractMethod<
+      [role: BytesLike, account: AddressLike, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'hasRole'): TypedContractMethod<
+      [role: BytesLike, account: AddressLike, ],
+      [boolean],
+      'view'
+    >;
+getFunction(nameOrSignature: 'hasVotedOnDispute'): TypedContractMethod<
+      [arg0: BigNumberish, arg1: AddressLike, ],
+      [boolean],
+      'view'
+    >;
+getFunction(nameOrSignature: 'lateFeeBps'): TypedContractMethod<
+      [],
+      [bigint],
       'view'
     >;
 getFunction(nameOrSignature: 'listProperty'): TypedContractMethod<
@@ -254,10 +536,25 @@ getFunction(nameOrSignature: 'payRent'): TypedContractMethod<
     >;
 getFunction(nameOrSignature: 'properties'): TypedContractMethod<
       [arg0: BigNumberish, ],
-      [[string, string, string, bigint, bigint, bigint, string, bigint, bigint, bigint, string, string] & {landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string, note: string }],
+      [[string, string, string, bigint, bigint, bigint, string, bigint, bigint, bigint, string, string, bigint, bigint, boolean] & {landlord: string, title: string, location: string, monthlyRent: bigint, deposit: bigint, status: bigint, tenant: string, depositHeld: bigint, startedAt: bigint, rentPaidCount: bigint, imageCID: string, note: string, nextDueDate: bigint, proposedDeduction: bigint, settlementProposed: boolean }],
       'view'
     >;
 getFunction(nameOrSignature: 'propertyCount'): TypedContractMethod<
+      [],
+      [bigint],
+      'view'
+    >;
+getFunction(nameOrSignature: 'proposeSettlement'): TypedContractMethod<
+      [id: BigNumberish, deductAmount: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'renounceRole'): TypedContractMethod<
+      [role: BytesLike, callerConfirmation: AddressLike, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'rentPeriod'): TypedContractMethod<
       [],
       [bigint],
       'view'
@@ -267,15 +564,44 @@ getFunction(nameOrSignature: 'rentProperty'): TypedContractMethod<
       [void],
       'payable'
     >;
+getFunction(nameOrSignature: 'revokeRole'): TypedContractMethod<
+      [role: BytesLike, account: AddressLike, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'supportsInterface'): TypedContractMethod<
+      [interfaceId: BytesLike, ],
+      [boolean],
+      'view'
+    >;
+getFunction(nameOrSignature: 'voteOnDispute'): TypedContractMethod<
+      [id: BigNumberish, deductAmount: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >;
 
-    getEvent(key: 'HandoverConfirmed'): TypedContractEvent<HandoverConfirmedEvent.InputTuple, HandoverConfirmedEvent.OutputTuple, HandoverConfirmedEvent.OutputObject>;
+    getEvent(key: 'DisputeRaised'): TypedContractEvent<DisputeRaisedEvent.InputTuple, DisputeRaisedEvent.OutputTuple, DisputeRaisedEvent.OutputObject>;
+getEvent(key: 'DisputeVoteCast'): TypedContractEvent<DisputeVoteCastEvent.InputTuple, DisputeVoteCastEvent.OutputTuple, DisputeVoteCastEvent.OutputObject>;
+getEvent(key: 'HandoverConfirmed'): TypedContractEvent<HandoverConfirmedEvent.InputTuple, HandoverConfirmedEvent.OutputTuple, HandoverConfirmedEvent.OutputObject>;
 getEvent(key: 'LeaseEnded'): TypedContractEvent<LeaseEndedEvent.InputTuple, LeaseEndedEvent.OutputTuple, LeaseEndedEvent.OutputObject>;
 getEvent(key: 'PropertyListed'): TypedContractEvent<PropertyListedEvent.InputTuple, PropertyListedEvent.OutputTuple, PropertyListedEvent.OutputObject>;
 getEvent(key: 'RentPaid'): TypedContractEvent<RentPaidEvent.InputTuple, RentPaidEvent.OutputTuple, RentPaidEvent.OutputObject>;
 getEvent(key: 'Rented'): TypedContractEvent<RentedEvent.InputTuple, RentedEvent.OutputTuple, RentedEvent.OutputObject>;
+getEvent(key: 'RoleAdminChanged'): TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>;
+getEvent(key: 'RoleGranted'): TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>;
+getEvent(key: 'RoleRevoked'): TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>;
+getEvent(key: 'SettlementProposed'): TypedContractEvent<SettlementProposedEvent.InputTuple, SettlementProposedEvent.OutputTuple, SettlementProposedEvent.OutputObject>;
 
     filters: {
       
+      'DisputeRaised(uint256,address)': TypedContractEvent<DisputeRaisedEvent.InputTuple, DisputeRaisedEvent.OutputTuple, DisputeRaisedEvent.OutputObject>;
+      DisputeRaised: TypedContractEvent<DisputeRaisedEvent.InputTuple, DisputeRaisedEvent.OutputTuple, DisputeRaisedEvent.OutputObject>;
+    
+
+      'DisputeVoteCast(uint256,address,uint256,uint256)': TypedContractEvent<DisputeVoteCastEvent.InputTuple, DisputeVoteCastEvent.OutputTuple, DisputeVoteCastEvent.OutputObject>;
+      DisputeVoteCast: TypedContractEvent<DisputeVoteCastEvent.InputTuple, DisputeVoteCastEvent.OutputTuple, DisputeVoteCastEvent.OutputObject>;
+    
+
       'HandoverConfirmed(uint256,address,uint256)': TypedContractEvent<HandoverConfirmedEvent.InputTuple, HandoverConfirmedEvent.OutputTuple, HandoverConfirmedEvent.OutputObject>;
       HandoverConfirmed: TypedContractEvent<HandoverConfirmedEvent.InputTuple, HandoverConfirmedEvent.OutputTuple, HandoverConfirmedEvent.OutputObject>;
     
@@ -288,12 +614,28 @@ getEvent(key: 'Rented'): TypedContractEvent<RentedEvent.InputTuple, RentedEvent.
       PropertyListed: TypedContractEvent<PropertyListedEvent.InputTuple, PropertyListedEvent.OutputTuple, PropertyListedEvent.OutputObject>;
     
 
-      'RentPaid(uint256,address,uint256,uint256)': TypedContractEvent<RentPaidEvent.InputTuple, RentPaidEvent.OutputTuple, RentPaidEvent.OutputObject>;
+      'RentPaid(uint256,address,uint256,uint256,uint256)': TypedContractEvent<RentPaidEvent.InputTuple, RentPaidEvent.OutputTuple, RentPaidEvent.OutputObject>;
       RentPaid: TypedContractEvent<RentPaidEvent.InputTuple, RentPaidEvent.OutputTuple, RentPaidEvent.OutputObject>;
     
 
       'Rented(uint256,address,uint256,uint256)': TypedContractEvent<RentedEvent.InputTuple, RentedEvent.OutputTuple, RentedEvent.OutputObject>;
       Rented: TypedContractEvent<RentedEvent.InputTuple, RentedEvent.OutputTuple, RentedEvent.OutputObject>;
+    
+
+      'RoleAdminChanged(bytes32,bytes32,bytes32)': TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>;
+      RoleAdminChanged: TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>;
+    
+
+      'RoleGranted(bytes32,address,address)': TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>;
+      RoleGranted: TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>;
+    
+
+      'RoleRevoked(bytes32,address,address)': TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>;
+      RoleRevoked: TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>;
+    
+
+      'SettlementProposed(uint256,uint256)': TypedContractEvent<SettlementProposedEvent.InputTuple, SettlementProposedEvent.OutputTuple, SettlementProposedEvent.OutputObject>;
+      SettlementProposed: TypedContractEvent<SettlementProposedEvent.InputTuple, SettlementProposedEvent.OutputTuple, SettlementProposedEvent.OutputObject>;
     
     };
   }

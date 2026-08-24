@@ -21,7 +21,7 @@ function pageNumbers(current, total) {
   return pages;
 }
 
-export function PropertyList({ properties, history, account, busy, onRent, onPay, onHandover, onEnd, onSelectTx }) {
+export function PropertyList({ properties, history, onSelectTx }) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState(null);
@@ -74,12 +74,6 @@ export function PropertyList({ properties, history, account, busy, onRent, onPay
           <PropertyCard
             key={p.id}
             property={p}
-            account={account}
-            busy={busy}
-            onRent={onRent}
-            onPay={onPay}
-            onHandover={onHandover}
-            onEnd={onEnd}
             onOpen={(prop) => setSelectedId(prop.id)}
           />
         ))}
@@ -102,13 +96,7 @@ export function PropertyList({ properties, history, account, busy, onRent, onPay
       <PropertyDetailModal
         property={selected}
         history={history}
-        account={account}
-        busy={busy}
         onClose={() => setSelectedId(null)}
-        onRent={onRent}
-        onPay={onPay}
-        onHandover={onHandover}
-        onEnd={onEnd}
         onSelectTx={onSelectTx}
       />
     </section>

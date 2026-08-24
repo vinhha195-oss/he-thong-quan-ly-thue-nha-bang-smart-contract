@@ -4,7 +4,7 @@ import { PropertyActions } from "./PropertyActions.jsx";
 import { PropertyImage } from "./PropertyImage.jsx";
 import { StatusBadge } from "./StatusBadge.jsx";
 
-export function PropertyCard({ property: p, account, busy, onRent, onPay, onHandover, onEnd, onOpen }) {
+export function PropertyCard({ property: p, onOpen }) {
   return (
     <div className="card property">
       <button className="property-image-btn" onClick={() => onOpen(p)} aria-label="Xem chi tiết phòng">
@@ -33,7 +33,7 @@ export function PropertyCard({ property: p, account, busy, onRent, onPay, onHand
         {p.status >= 1 && <div><span>Số kỳ đã trả</span><b>{p.rentPaidCount}</b></div>}
         {p.depositHeld > 0n && <div><span>Cọc đang giữ</span><b>{eth(p.depositHeld)}</b></div>}
       </div>
-      <PropertyActions property={p} account={account} busy={busy} onRent={onRent} onPay={onPay} onHandover={onHandover} onEnd={onEnd} />
+      <PropertyActions property={p} />
     </div>
   );
 }

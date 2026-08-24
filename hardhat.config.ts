@@ -11,6 +11,9 @@ export default defineConfig({
         enabled: true,
         runs: 200,
       },
+      // Property struct + listProperty co nhieu truong -> "stack too deep" neu khong
+      // bat viaIR (compiler moi dung bo trung gian IR, khong con gioi han 16 bien cuc bo).
+      viaIR: true,
     },
   },
   networks: {
