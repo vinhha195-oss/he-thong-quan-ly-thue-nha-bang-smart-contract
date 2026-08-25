@@ -81,6 +81,12 @@ body {
 }
 .wallet:hover { background: #0d1830; transform: translateY(-1px); box-shadow: var(--shadow); }
 .wallet:active { transform: translateY(0); }
+.wallet.metamask {
+  background: linear-gradient(135deg, #f6851b, #e2761b); border-color: #e2761b;
+  box-shadow: 0 6px 16px -4px rgba(230, 129, 27, .45);
+}
+.wallet.metamask:hover { background: linear-gradient(135deg, #ff9838, #f6851b); }
+.wallet .fox { font-size: 16px; line-height: 1; }
 .wallet.connected { background: #fff; color: var(--ink); border-color: var(--line); cursor: default; padding: 6px 16px 6px 6px; }
 .wallet.connected:hover { transform: none; box-shadow: var(--shadow-sm); background: #fff; }
 

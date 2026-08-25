@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { PropertyCard } from "./PropertyCard.jsx";
 import { PropertyDetailModal } from "./PropertyDetailModal.jsx";
 
-const PAGE_SIZE = 4;
+const PAGE_SIZE = 8;
 
 const SEARCH_ICON = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
