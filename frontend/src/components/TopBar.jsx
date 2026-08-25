@@ -28,9 +28,21 @@ export function TopBar({ account, onConnect, onDisconnect, onSwitchWallet, canSw
       </div>
       {account ? (
         <>
-          <button className="wallet connected" onClick={() => setMenuOpen(true)}>
-            <Avatar address={account} size={26} />{short(account)}
-          </button>
+          <div className="wallet connected">
+            <button className="wallet-chip-main" onClick={() => setMenuOpen(true)}>
+              <Avatar address={account} size={22} />{short(account)}
+            </button>
+            {canSwitchWallet && (
+              <button
+                className="wallet-chip-switch"
+                onClick={onSwitchWallet}
+                title="Đổi ví khác"
+                aria-label="Đổi ví khác"
+              >
+                {SWITCH_ICON}
+              </button>
+            )}
+          </div>
           <Modal open={menuOpen} onClose={() => setMenuOpen(false)}>
             <h2>Ví đang kết nối</h2>
             <div className="wallet-menu-account">

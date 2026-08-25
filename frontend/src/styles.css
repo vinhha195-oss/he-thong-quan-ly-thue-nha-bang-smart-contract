@@ -87,8 +87,19 @@ body {
 }
 .wallet.metamask:hover { background: linear-gradient(135deg, #ff9838, #f6851b); }
 .wallet .fox { font-size: 16px; line-height: 1; }
-.wallet.connected { background: #fff; color: var(--ink); border-color: var(--line); padding: 6px 16px 6px 6px; }
+.wallet.connected { background: #fff; color: var(--ink); border-color: var(--line); padding: 6px 6px 6px 6px; cursor: default; gap: 4px; }
 .wallet.connected:hover { border-color: var(--ink-soft); box-shadow: var(--shadow); }
+.wallet-chip-main {
+  display: inline-flex; align-items: center; gap: 8px; background: none; border: none;
+  color: inherit; font: inherit; padding: 0 8px 0 2px; cursor: pointer; border-radius: 8px;
+}
+.wallet-chip-main:hover { background: var(--slate-wash); }
+.wallet-chip-switch {
+  display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px;
+  background: var(--slate-wash); border: none; color: var(--ink-soft); border-radius: 50%; cursor: pointer;
+  transition: color .15s var(--ease), background .15s var(--ease), transform .15s var(--ease);
+}
+.wallet-chip-switch:hover { background: var(--teal-wash); color: var(--teal-dark); transform: rotate(180deg); }
 
 .wallet-menu-account {
   display: flex; align-items: center; gap: 12px; padding: 14px; margin: 4px 0 20px;
