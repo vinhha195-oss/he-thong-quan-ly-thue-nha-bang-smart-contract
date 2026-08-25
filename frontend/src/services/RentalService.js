@@ -10,7 +10,7 @@ import { MockRentalService } from "./MockRentalService.js";
  * @property {string} location
  * @property {bigint} monthlyRent  - wei
  * @property {bigint} deposit      - wei
- * @property {number} status       - 0 Listed, 1 Active, 2 HandedOver, 3 Ended, 4 Disputed
+ * @property {number} status       - 0 Listed, 1 Active, 2 HandedOver, 3 Ended, 4 Disputed, 5 Cancelled
  * @property {string} tenant
  * @property {bigint} depositHeld  - wei
  * @property {number} rentPaidCount
@@ -51,6 +51,7 @@ import { MockRentalService } from "./MockRentalService.js";
  * @property {() => Promise<Property[]>} loadProperties
  * @property {() => Promise<HistoryEvent[]>} loadHistory
  * @property {(input: {title: string, location: string, rent: string, deposit: string, imageCID?: string, note?: string}) => Promise<void>} listProperty
+ * @property {(property: Property) => Promise<void>} cancelListing - chi chu nha, chi khi con Status.Listed (chua ai dat coc)
  * @property {(property: Property) => Promise<void>} rentProperty
  * @property {(property: Property) => Promise<{total: bigint, penalty: bigint, isLate: boolean}>} quotePayRent
  * @property {(property: Property) => Promise<void>} payRent

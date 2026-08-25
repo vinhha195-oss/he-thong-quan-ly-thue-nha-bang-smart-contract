@@ -54,8 +54,8 @@ contract RentalManager is AccessControl, ReentrancyGuard {
     }
 
     // Trang thai vong doi mot tai san/hop dong
-    enum Status { Listed, Active, HandedOver, Ended, Disputed }
-    //             Dang cho thue / Dang thue / Da ban giao / Da ket thuc / Dang tranh chap
+    enum Status { Listed, Active, HandedOver, Ended, Disputed, Cancelled }
+    //             Dang cho thue / Dang thue / Da ban giao / Da ket thuc / Dang tranh chap / Da huy
 
     struct Property {
         address landlord;
@@ -91,6 +91,7 @@ contract RentalManager is AccessControl, ReentrancyGuard {
     event DisputeRaised(uint256 indexed id, address indexed tenant);
     event DisputeVoteCast(uint256 indexed id, address indexed arbiter, uint256 deductAmount, uint256 voteCount);
     event LeaseEnded(uint256 indexed id, uint256 refundToTenant, uint256 deductToLandlord, uint256 endedAt);
+    event ListingCancelled(uint256 indexed id, address indexed landlord);
 
     function listProperty(
         string calldata title,
@@ -121,6 +122,19 @@ contract RentalManager is AccessControl, ReentrancyGuard {
         });
         emit PropertyListed(propertyCount, msg.sender, title, monthlyRent, deposit);
         return propertyCount;
+    }
+
+    /// @notice Chu nha huy tin dang cho thue - chi khi CHUA co ai dat coc (con Listed).
+    ///         Vi du bat buoc de sua sai (vd nhap nham gia) khi cac truong cua Property
+    ///         khong the chinh sua lai duoc sau khi da listProperty.
+    function cancelListing(uint256 id) external {
+        Property storage p = properties[id];
+        require(p.landlord != address(0), "Tai san khong ton tai");
+        require(msg.sender == p.landlord, "Chi chu nha moi huy duoc");
+        require(p.status == Status.Listed, "Tai san khong con trong");
+
+        p.status = Status.Cancelled;
+        emit ListingCancelled(id, msg.sender);
     }
 
     function rentProperty(uint256 id) external payable nonReentrant {

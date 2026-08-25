@@ -278,6 +278,7 @@ button.ghost:disabled { opacity: .5; cursor: not-allowed; }
 .badge.handover { background: var(--indigo-wash); color: var(--indigo); border-color: #d2d9f8; }
 .badge.ended { background: var(--slate-wash); color: var(--ink-soft); border-color: var(--line); }
 .badge.disputed { background: var(--rose-wash); color: var(--rose); border-color: #f3c6cf; }
+.badge.cancelled { background: var(--slate-wash); color: var(--ink-faint); border-color: var(--line); text-decoration: line-through; }
 
 .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; padding: 17px 0; border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line); }
 .facts span, .detail-facts span { display: block; font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }

@@ -13,6 +13,7 @@ const BUSINESS_EVENTS = new Set([
   "DisputeRaised",
   "DisputeVoteCast",
   "LeaseEnded",
+  "ListingCancelled",
 ]);
 
 const provider = new JsonRpcProvider(config.rpcUrl);

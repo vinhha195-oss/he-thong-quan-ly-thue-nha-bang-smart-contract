@@ -128,7 +128,7 @@ export class ChainRentalService {
     const events = [];
     // fromBlock = block deploy contract (khong quet tu block 0), va quet theo tung
     // doan LOG_CHUNK_SIZE block - xem ly do o dinh nghia queryFilterChunked.
-    const [listed, rented, paid, handed, proposed, disputed, votes, ended] = await Promise.all([
+    const [listed, rented, paid, handed, proposed, disputed, votes, ended, cancelled] = await Promise.all([
       queryFilterChunked(c, c.filters.PropertyListed(), DEPLOYMENT_BLOCK),
       queryFilterChunked(c, c.filters.Rented(), DEPLOYMENT_BLOCK),
       queryFilterChunked(c, c.filters.RentPaid(), DEPLOYMENT_BLOCK),
@@ -137,6 +137,7 @@ export class ChainRentalService {
       queryFilterChunked(c, c.filters.DisputeRaised(), DEPLOYMENT_BLOCK),
       queryFilterChunked(c, c.filters.DisputeVoteCast(), DEPLOYMENT_BLOCK),
       queryFilterChunked(c, c.filters.LeaseEnded(), DEPLOYMENT_BLOCK),
+      queryFilterChunked(c, c.filters.ListingCancelled(), DEPLOYMENT_BLOCK),
     ]);
 
     // Xay map id -> landlord/tenant tu chinh cac event da co, khong can goi lai
@@ -222,6 +223,15 @@ export class ChainRentalService {
       });
     });
 
+    cancelled.forEach((e) => {
+      const id = Number(e.args[0]);
+      events.push({
+        block: e.blockNumber, txHash: e.transactionHash, timestamp: null,
+        type: "Hủy tin đăng", id, from: e.args[1], to: null, amount: null,
+        detail: `${short(e.args[1])} đã hủy tin đăng`, extra: {},
+      });
+    });
+
     events.sort((a, b) => b.block - a.block);
     return events;
   }
@@ -229,6 +239,13 @@ export class ChainRentalService {
   async listProperty({ title, location, rent, deposit, imageCID, note }, { onPending } = {}) {
     const c = await this.#getContract(true);
     const t = await c.listProperty(title, location, parseEth(rent), parseEth(deposit), imageCID || "", note || "");
+    onPending?.();
+    await t.wait();
+  }
+
+  async cancelListing(property, { onPending } = {}) {
+    const c = await this.#getContract(true);
+    const t = await c.cancelListing(property.id);
     onPending?.();
     await t.wait();
   }

@@ -140,6 +140,21 @@ export class MockRentalService {
     return p;
   }
 
+  async cancelListing(property, { onPending } = {}) {
+    const sender = this.#requireAccount();
+    const p = this.#find(property);
+    if (sender.toLowerCase() !== p.landlord.toLowerCase()) throw new Error("Chỉ chủ nhà mới hủy được");
+    if (p.status !== 0) throw new Error("Tài sản không còn trống");
+    onPending?.();
+    await delay(500);
+
+    p.status = 5;
+    this.#pushHistory({
+      type: "Hủy tin đăng", id: p.id, from: sender,
+      detail: `${sender.slice(0, 6)}…${sender.slice(-4)} đã hủy tin đăng`,
+    });
+  }
+
   async rentProperty(property, { onPending } = {}) {
     const sender = this.#requireAccount();
     const p = this.#find(property);

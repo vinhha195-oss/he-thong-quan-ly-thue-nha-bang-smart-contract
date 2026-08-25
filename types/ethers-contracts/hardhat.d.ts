@@ -10,23 +10,23 @@ import * as Contracts from "./index.js";
 
 declare module "@nomicfoundation/hardhat-ethers/types" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
-  getContractFactory(name: 'RentalAgreementToken', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.RentalAgreementToken__factory>
-getContractFactory(name: 'RentalManager', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.RentalManager__factory>
+  getContractFactory(name: 'RentalManager', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.RentalManager__factory>
+getContractFactory(name: 'RentalAgreementToken', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.RentalAgreementToken__factory>
 getContractFactory(name: 'IRentalManagerLike', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.IRentalManagerLike__factory>
 getContractFactory(name: 'MaliciousReceiver', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.MaliciousReceiver__factory>
 
-  getContractAt(name: 'RentalAgreementToken', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.RentalAgreementToken>
-getContractAt(name: 'RentalManager', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.RentalManager>
+  getContractAt(name: 'RentalManager', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.RentalManager>
+getContractAt(name: 'RentalAgreementToken', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.RentalAgreementToken>
 getContractAt(name: 'IRentalManagerLike', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.IRentalManagerLike>
 getContractAt(name: 'MaliciousReceiver', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.MaliciousReceiver>
 
-  deployContract(name: 'RentalAgreementToken', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.RentalAgreementToken>
-deployContract(name: 'RentalManager', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.RentalManager>
+  deployContract(name: 'RentalManager', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.RentalManager>
+deployContract(name: 'RentalAgreementToken', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.RentalAgreementToken>
 deployContract(name: 'IRentalManagerLike', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.IRentalManagerLike>
 deployContract(name: 'MaliciousReceiver', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MaliciousReceiver>
 
-  deployContract(name: 'RentalAgreementToken', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.RentalAgreementToken>
-deployContract(name: 'RentalManager', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.RentalManager>
+  deployContract(name: 'RentalManager', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.RentalManager>
+deployContract(name: 'RentalAgreementToken', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.RentalAgreementToken>
 deployContract(name: 'IRentalManagerLike', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.IRentalManagerLike>
 deployContract(name: 'MaliciousReceiver', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MaliciousReceiver>
 

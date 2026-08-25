@@ -13,7 +13,7 @@ const CHECK_ICON = (
 export function PropertyActions({ property: p }) {
   const {
     account, busy, isArbiter, quotePayRent,
-    rentProperty, payRent, confirmHandover,
+    cancelListing, rentProperty, payRent, confirmHandover,
     proposeSettlement, acceptSettlement, disputeSettlement, voteOnDispute,
   } = useRental();
   const isLandlord = sameAddr(account, p.landlord);
@@ -39,6 +39,11 @@ export function PropertyActions({ property: p }) {
     voteOnDispute(p, input);
   };
 
+  const handleCancel = () => {
+    if (!window.confirm("Hủy tin đăng này? Không thể hoàn tác - nếu đăng nhầm giá, hãy hủy rồi đăng lại tin mới.")) return;
+    cancelListing(p);
+  };
+
   if (p.status === 0) {
     return (
       <div className="actions">
@@ -47,7 +52,20 @@ export function PropertyActions({ property: p }) {
             Đặt cọc &amp; thuê ({eth(p.deposit)})
           </button>
         )}
-        {isLandlord && <span className="note">Đang chờ người thuê đặt cọc</span>}
+        {isLandlord && (
+          <>
+            <span className="note">Đang chờ người thuê đặt cọc</span>
+            <button className="ghost danger" disabled={busy} onClick={handleCancel}>Hủy tin</button>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  if (p.status === 5) {
+    return (
+      <div className="actions">
+        <span className="note">Tin đăng đã bị hủy bởi chủ nhà</span>
       </div>
     );
   }

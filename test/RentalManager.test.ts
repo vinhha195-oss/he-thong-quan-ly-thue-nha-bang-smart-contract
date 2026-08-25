@@ -207,6 +207,50 @@ describe("RentalManager", function () {
     });
   });
 
+  describe("Huy tin dang (cancelListing)", function () {
+    it("Chu nha huy tin dang con trong -> chuyen sang trang thai Da huy", async function () {
+      const { contract, landlord } = await networkHelpers.loadFixture(
+        deployRentalSystemFixture,
+      );
+
+      await contract.connect(landlord).cancelListing(1);
+      const p = await contract.getProperty(1);
+      expect(p.status).to.equal(5n); // Cancelled
+    });
+
+    it("Chi chu nha moi huy duoc tin cua minh", async function () {
+      const { contract, other } = await networkHelpers.loadFixture(
+        deployRentalSystemFixture,
+      );
+
+      await expect(
+        contract.connect(other).cancelListing(1),
+      ).to.be.revertedWith("Chi chu nha moi huy duoc");
+    });
+
+    it("Khong huy duoc tin da co nguoi dat coc", async function () {
+      const { contract, landlord, tenant } = await networkHelpers.loadFixture(
+        deployRentalSystemFixture,
+      );
+
+      await contract.connect(tenant).rentProperty(1, { value: deposit });
+      await expect(
+        contract.connect(landlord).cancelListing(1),
+      ).to.be.revertedWith("Tai san khong con trong");
+    });
+
+    it("Tin da huy thi khong thue duoc nua", async function () {
+      const { contract, landlord, tenant } = await networkHelpers.loadFixture(
+        deployRentalSystemFixture,
+      );
+
+      await contract.connect(landlord).cancelListing(1);
+      await expect(
+        contract.connect(tenant).rentProperty(1, { value: deposit }),
+      ).to.be.revertedWith("Tai san khong con trong");
+    });
+  });
+
   describe("Tat toan hop dong: de xuat / dong y / khieu nai / trong tai (multisig)", function () {
     async function handedOverFixture() {
       const base = await deployRentalSystemFixture();

@@ -13,15 +13,16 @@ export declare namespace RentalManager {
     }
 
   export interface RentalManagerInterface extends Interface {
-    getFunction(nameOrSignature: "ARBITER_ROLE" | "DEFAULT_ADMIN_ROLE" | "acceptSettlement" | "agreementToken" | "arbiterApprovalsRequired" | "confirmHandover" | "disputeSettlement" | "disputeVotes" | "getAllProperties" | "getProperty" | "getRoleAdmin" | "grantRole" | "hasRole" | "hasVotedOnDispute" | "lateFeeBps" | "listProperty" | "payRent" | "properties" | "propertyCount" | "proposeSettlement" | "renounceRole" | "rentPeriod" | "rentProperty" | "revokeRole" | "supportsInterface" | "voteOnDispute"): FunctionFragment;
+    getFunction(nameOrSignature: "ARBITER_ROLE" | "DEFAULT_ADMIN_ROLE" | "acceptSettlement" | "agreementToken" | "arbiterApprovalsRequired" | "cancelListing" | "confirmHandover" | "disputeSettlement" | "disputeVotes" | "getAllProperties" | "getProperty" | "getRoleAdmin" | "grantRole" | "hasRole" | "hasVotedOnDispute" | "lateFeeBps" | "listProperty" | "payRent" | "properties" | "propertyCount" | "proposeSettlement" | "renounceRole" | "rentPeriod" | "rentProperty" | "revokeRole" | "supportsInterface" | "voteOnDispute"): FunctionFragment;
 
-    getEvent(nameOrSignatureOrTopic: "DisputeRaised" | "DisputeVoteCast" | "HandoverConfirmed" | "LeaseEnded" | "PropertyListed" | "RentPaid" | "Rented" | "RoleAdminChanged" | "RoleGranted" | "RoleRevoked" | "SettlementProposed"): EventFragment;
+    getEvent(nameOrSignatureOrTopic: "DisputeRaised" | "DisputeVoteCast" | "HandoverConfirmed" | "LeaseEnded" | "ListingCancelled" | "PropertyListed" | "RentPaid" | "Rented" | "RoleAdminChanged" | "RoleGranted" | "RoleRevoked" | "SettlementProposed"): EventFragment;
 
     encodeFunctionData(functionFragment: 'ARBITER_ROLE', values?: undefined): string;
 encodeFunctionData(functionFragment: 'DEFAULT_ADMIN_ROLE', values?: undefined): string;
 encodeFunctionData(functionFragment: 'acceptSettlement', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'agreementToken', values?: undefined): string;
 encodeFunctionData(functionFragment: 'arbiterApprovalsRequired', values?: undefined): string;
+encodeFunctionData(functionFragment: 'cancelListing', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'confirmHandover', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'disputeSettlement', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'disputeVotes', values: [BigNumberish, BigNumberish]): string;
@@ -49,6 +50,7 @@ decodeFunctionResult(functionFragment: 'DEFAULT_ADMIN_ROLE', data: BytesLike): R
 decodeFunctionResult(functionFragment: 'acceptSettlement', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'agreementToken', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'arbiterApprovalsRequired', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'cancelListing', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'confirmHandover', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'disputeSettlement', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'disputeVotes', data: BytesLike): Result;
@@ -113,6 +115,18 @@ decodeFunctionResult(functionFragment: 'voteOnDispute', data: BytesLike): Result
       export type InputTuple = [id: BigNumberish, refundToTenant: BigNumberish, deductToLandlord: BigNumberish, endedAt: BigNumberish];
       export type OutputTuple = [id: bigint, refundToTenant: bigint, deductToLandlord: bigint, endedAt: bigint];
       export interface OutputObject {id: bigint, refundToTenant: bigint, deductToLandlord: bigint, endedAt: bigint };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace ListingCancelledEvent {
+      export type InputTuple = [id: BigNumberish, landlord: AddressLike];
+      export type OutputTuple = [id: bigint, landlord: string];
+      export interface OutputObject {id: bigint, landlord: string };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -275,6 +289,14 @@ decodeFunctionResult(functionFragment: 'voteOnDispute', data: BytesLike): Result
       [],
       [bigint],
       'view'
+    >
+    
+
+    
+    cancelListing: TypedContractMethod<
+      [id: BigNumberish, ],
+      [void],
+      'nonpayable'
     >
     
 
@@ -474,6 +496,11 @@ getFunction(nameOrSignature: 'arbiterApprovalsRequired'): TypedContractMethod<
       [bigint],
       'view'
     >;
+getFunction(nameOrSignature: 'cancelListing'): TypedContractMethod<
+      [id: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >;
 getFunction(nameOrSignature: 'confirmHandover'): TypedContractMethod<
       [id: BigNumberish, ],
       [void],
@@ -584,6 +611,7 @@ getFunction(nameOrSignature: 'voteOnDispute'): TypedContractMethod<
 getEvent(key: 'DisputeVoteCast'): TypedContractEvent<DisputeVoteCastEvent.InputTuple, DisputeVoteCastEvent.OutputTuple, DisputeVoteCastEvent.OutputObject>;
 getEvent(key: 'HandoverConfirmed'): TypedContractEvent<HandoverConfirmedEvent.InputTuple, HandoverConfirmedEvent.OutputTuple, HandoverConfirmedEvent.OutputObject>;
 getEvent(key: 'LeaseEnded'): TypedContractEvent<LeaseEndedEvent.InputTuple, LeaseEndedEvent.OutputTuple, LeaseEndedEvent.OutputObject>;
+getEvent(key: 'ListingCancelled'): TypedContractEvent<ListingCancelledEvent.InputTuple, ListingCancelledEvent.OutputTuple, ListingCancelledEvent.OutputObject>;
 getEvent(key: 'PropertyListed'): TypedContractEvent<PropertyListedEvent.InputTuple, PropertyListedEvent.OutputTuple, PropertyListedEvent.OutputObject>;
 getEvent(key: 'RentPaid'): TypedContractEvent<RentPaidEvent.InputTuple, RentPaidEvent.OutputTuple, RentPaidEvent.OutputObject>;
 getEvent(key: 'Rented'): TypedContractEvent<RentedEvent.InputTuple, RentedEvent.OutputTuple, RentedEvent.OutputObject>;
@@ -608,6 +636,10 @@ getEvent(key: 'SettlementProposed'): TypedContractEvent<SettlementProposedEvent.
 
       'LeaseEnded(uint256,uint256,uint256,uint256)': TypedContractEvent<LeaseEndedEvent.InputTuple, LeaseEndedEvent.OutputTuple, LeaseEndedEvent.OutputObject>;
       LeaseEnded: TypedContractEvent<LeaseEndedEvent.InputTuple, LeaseEndedEvent.OutputTuple, LeaseEndedEvent.OutputObject>;
+    
+
+      'ListingCancelled(uint256,address)': TypedContractEvent<ListingCancelledEvent.InputTuple, ListingCancelledEvent.OutputTuple, ListingCancelledEvent.OutputObject>;
+      ListingCancelled: TypedContractEvent<ListingCancelledEvent.InputTuple, ListingCancelledEvent.OutputTuple, ListingCancelledEvent.OutputObject>;
     
 
       'PropertyListed(uint256,address,string,uint256,uint256)': TypedContractEvent<PropertyListedEvent.InputTuple, PropertyListedEvent.OutputTuple, PropertyListedEvent.OutputObject>;

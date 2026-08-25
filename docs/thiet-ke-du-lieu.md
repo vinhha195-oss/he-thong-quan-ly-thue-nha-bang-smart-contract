@@ -14,11 +14,13 @@ tại [docs/lua-chon-token.md](./lua-chon-token.md)).
 | 2 | `HandedOver` | Người thuê đã xác nhận bàn giao (trả phòng); có thể đang chờ chủ nhà đề xuất tất toán, hoặc chờ người thuê phản hồi đề xuất. |
 | 3 | `Ended` | Đã tất toán cọc, hợp đồng kết thúc. |
 | 4 | `Disputed` | Người thuê không đồng ý mức khấu trừ chủ nhà đề xuất — đang chờ trọng tài (`ARBITER_ROLE`) biểu quyết. |
+| 5 | `Cancelled` | Chủ nhà đã hủy tin đăng (`cancelListing`) trong lúc còn `Listed` — vd đăng nhầm giá. Không thể thuê được nữa. |
 
 Chuyển trạng thái gần như một chiều: `Listed → Active → HandedOver → {Ended | Disputed
-→ Ended}` — không có đường lùi thật sự (từ `Disputed` chỉ đi tiếp tới `Ended`, không
-quay lại `HandedOver`). Mỗi hàm public chỉ cho phép gọi khi contract đang ở đúng trạng
-thái liền trước (kiểm tra bằng `require`).
+→ Ended}`, hoặc `Listed → Cancelled` — không có đường lùi thật sự (từ `Disputed` chỉ đi
+tiếp tới `Ended`, không quay lại `HandedOver`; `Cancelled` là trạng thái cuối, không đi
+tiếp đâu nữa). Mỗi hàm public chỉ cho phép gọi khi contract đang ở đúng trạng thái liền
+trước (kiểm tra bằng `require`).
 
 ## 2. Struct `Property`
 
@@ -70,6 +72,7 @@ tài sản, id bắt đầu từ 1.
 | `DisputeRaised` | `disputeSettlement` thành công | `id, tenant` |
 | `DisputeVoteCast` | `voteOnDispute` thành công | `id, arbiter, deductAmount, voteCount` |
 | `LeaseEnded` | `acceptSettlement` hoặc `voteOnDispute` (khi đủ phiếu) thành công | `id, refundToTenant, deductToLandlord, endedAt` |
+| `ListingCancelled` | `cancelListing` thành công | `id, landlord` |
 
 Frontend (`ChainRentalService.loadHistory()`) gọi `contract.queryFilter()` cho tất cả
 event này rồi gộp + sắp xếp theo `blockNumber` giảm dần — đây là cách "theo dõi lịch sử
@@ -80,6 +83,7 @@ thanh toán" mà không cần một database off-chain riêng.
 | Hàm | Ai gọi được | Điều kiện chặn | Hiệu ứng tiền |
 |---|---|---|---|
 | `listProperty(title, location, monthlyRent, deposit, imageCID, note)` | Bất kỳ ai (trở thành chủ nhà) | `monthlyRent > 0` | Không chuyển tiền. `imageCID`/`note` có thể truyền `""` nếu không dùng. |
+| `cancelListing(id)` | Đúng `landlord` | tài sản tồn tại; đang `Listed` (chưa ai đặt cọc) | Không chuyển tiền — chuyển sang `Cancelled`, tin không hiển thị thuê được nữa. |
 | `rentProperty(id)` payable | Bất kỳ ai trừ chủ nhà | tài sản tồn tại; đang `Listed`; `msg.sender != landlord`; `msg.value == deposit` | ETH gửi kèm **ở lại trong contract** (`depositHeld`); đồng thời mint 1 `RentalAgreementToken` với `tokenId = id` cho người thuê. |
 | `payRent(id)` payable | Đúng `tenant` | đang `Active`; `msg.sender == tenant`; `msg.value == monthlyRent (+ phạt trễ nếu quá `nextDueDate`)` | ETH **chuyển thẳng** cho `landlord` qua `call{value:}`. |
 | `confirmHandover(id)` | Đúng `tenant` | đang `Active`; `msg.sender == tenant` | Không chuyển tiền. |

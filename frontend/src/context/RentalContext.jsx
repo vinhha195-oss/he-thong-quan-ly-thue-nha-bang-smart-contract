@@ -118,6 +118,7 @@ export function RentalProvider({ children }) {
   };
 
   const listProperty = (values) => runTx((opts) => service.listProperty(values, opts), "Đã đăng tài sản");
+  const cancelListing = (property) => runTx((opts) => service.cancelListing(property, opts), "Đã hủy tin đăng");
   const rentProperty = (property) => runTx((opts) => service.rentProperty(property, opts), "Đặt cọc thành công");
   const payRent = (property) => runTx((opts) => service.payRent(property, opts), "Đã trả tiền thuê");
   const confirmHandover = (property) => runTx((opts) => service.confirmHandover(property, opts), "Đã xác nhận bàn giao");
@@ -147,6 +148,7 @@ export function RentalProvider({ children }) {
     canSwitchWallet: !service.isMock,
     switchWallet,
     listProperty,
+    cancelListing,
     rentProperty,
     payRent,
     quotePayRent,

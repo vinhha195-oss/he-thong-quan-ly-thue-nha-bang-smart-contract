@@ -30,7 +30,7 @@ export function PropertyCard({ property: p, onOpen }) {
         <div><span>Tiền cọc</span><b>{eth(p.deposit)}</b></div>
         <div><span>Chủ nhà</span><div className="addr-row"><Avatar address={p.landlord} size={18} /><b className="mono">{short(p.landlord)}</b></div></div>
         <div><span>Người thuê</span><div className="addr-row"><Avatar address={p.tenant} size={18} /><b className="mono">{short(p.tenant)}</b></div></div>
-        {p.status >= 1 && <div><span>Số kỳ đã trả</span><b>{p.rentPaidCount}</b></div>}
+        {p.status >= 1 && p.status !== 5 && <div><span>Số kỳ đã trả</span><b>{p.rentPaidCount}</b></div>}
         {p.depositHeld > 0n && <div><span>Cọc đang giữ</span><b>{eth(p.depositHeld)}</b></div>}
       </div>
       <PropertyActions property={p} />
