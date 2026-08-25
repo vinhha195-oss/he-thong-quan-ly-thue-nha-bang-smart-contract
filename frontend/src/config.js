@@ -1,6 +1,6 @@
 // File nay duoc tao tu dong boi scripts/sync-frontend-config.ts - KHONG sua tay.
-export const CONTRACT_ADDRESS = "0x8Ae7a8fE1Ef2C049d74171FB981f24459f3522Cc";
-export const DEPLOYMENT_BLOCK = 11551472;
+export const CONTRACT_ADDRESS = "0xa12e5Ad314ecf579BCec19a498F66F57F8C3C935";
+export const DEPLOYMENT_BLOCK = 11565047;
 export const CONTRACT_ABI = [
   {
     "inputs": [
@@ -178,6 +178,25 @@ export const CONTRACT_ABI = [
       }
     ],
     "name": "LeaseEnded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "landlord",
+        "type": "address"
+      }
+    ],
+    "name": "ListingCancelled",
     "type": "event"
   },
   {
@@ -442,6 +461,19 @@ export const CONTRACT_ABI = [
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "cancelListing",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
