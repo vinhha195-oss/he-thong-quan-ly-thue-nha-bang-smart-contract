@@ -45,6 +45,39 @@ export class ChainRentalService {
     return this.#account;
   }
 
+  /**
+   * Khoi phuc session khi tai lai trang (F5) MA KHONG hien popup MetaMask - chi hoi
+   * "cac tai khoan da duoc cap quyen truoc do" (eth_accounts), khac voi connect() dung
+   * eth_requestAccounts se luon hien popup xin quyen.
+   */
+  async tryReconnect() {
+    if (!window.ethereum) return null;
+    const accts = await window.ethereum.request({ method: "eth_accounts" });
+    this.#account = accts[0] || null;
+    return this.#account;
+  }
+
+  /** Mo lai popup chon tai khoan cua MetaMask de doi ví, ke ca khi da ket noi roi. */
+  async requestAccountSwitch() {
+    if (!window.ethereum) throw new Error("Chưa cài MetaMask");
+    await window.ethereum.request({
+      method: "wallet_requestPermissions",
+      params: [{ eth_accounts: {} }],
+    });
+    const accts = await window.ethereum.request({ method: "eth_accounts" });
+    this.#account = accts[0] || null;
+    return this.#account;
+  }
+
+  /**
+   * Ngat ket noi O MUC UNG DUNG - MetaMask khong cho website tu thu hoi quyen truy
+   * cap that su, day chi la "dang xuat khoi session" cua trang, nguoi dung van co the
+   * ket noi lai ngay ma khong can vao lai cai dat MetaMask.
+   */
+  disconnect() {
+    this.#account = null;
+  }
+
   getAccount() {
     return this.#account;
   }

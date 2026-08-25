@@ -4,6 +4,10 @@ import { CONTRACT_ABI } from "../config.js";
 
 export const RentalContext = createContext(null);
 
+// Danh dau nguoi dung CHU DONG ngat ket noi - de F5 lai khong tu dong noi lai session
+// (dung nguoc voi hanh vi mac dinh la tu khoi phuc ket noi khi con quyen).
+const DISCONNECT_KEY = "rental_wallet_disconnected";
+
 /**
  * Provider duy nhat noi UI (components/*) lay du lieu + goi hanh dong.
  * Khong biet gi ve ethers/mock ben trong — chi goi qua "service"
@@ -45,8 +49,16 @@ export function RentalProvider({ children }) {
   }, [account, loadData]);
 
   useEffect(() => {
-    // Che do mau: tu ket noi ngay de xem duoc UI day du ma khong can bam gi.
-    if (service.isMock) service.connect().then(setAccount);
+    if (service.isMock) {
+      // Che do mau: tu ket noi ngay de xem duoc UI day du ma khong can bam gi.
+      service.connect().then(setAccount);
+      return;
+    }
+    // Che do chain: tu khoi phuc session khi tai lai trang (F5) neu MetaMask van con
+    // cap quyen VA nguoi dung khong chu dong bam "Ngat ket noi" lan truoc - khong hien
+    // popup xin quyen, chi hoi lai cac tai khoan da duoc cho phep san.
+    if (localStorage.getItem(DISCONNECT_KEY) === "1") return;
+    service.tryReconnect?.().then((addr) => { if (addr) setAccount(addr); });
   }, [service]);
 
   useEffect(() => {
@@ -63,6 +75,26 @@ export function RentalProvider({ children }) {
     try {
       const addr = await service.connect();
       setAccount(addr);
+      localStorage.removeItem(DISCONNECT_KEY);
+    } catch (e) {
+      notify(e.message, "error");
+    }
+  };
+
+  const disconnect = () => {
+    service.disconnect?.();
+    setAccount(null);
+    localStorage.setItem(DISCONNECT_KEY, "1");
+    notify("Đã ngắt kết nối ví", "info");
+  };
+
+  const switchWallet = async () => {
+    try {
+      const addr = await service.requestAccountSwitch?.();
+      if (addr) {
+        setAccount(addr);
+        localStorage.removeItem(DISCONNECT_KEY);
+      }
     } catch (e) {
       notify(e.message, "error");
     }
@@ -111,6 +143,9 @@ export function RentalProvider({ children }) {
     toast,
     isArbiter,
     connect,
+    disconnect,
+    canSwitchWallet: !service.isMock,
+    switchWallet,
     listProperty,
     rentProperty,
     payRent,

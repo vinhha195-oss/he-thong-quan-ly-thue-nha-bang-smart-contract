@@ -87,8 +87,18 @@ body {
 }
 .wallet.metamask:hover { background: linear-gradient(135deg, #ff9838, #f6851b); }
 .wallet .fox { font-size: 16px; line-height: 1; }
-.wallet.connected { background: #fff; color: var(--ink); border-color: var(--line); cursor: default; padding: 6px 16px 6px 6px; }
-.wallet.connected:hover { transform: none; box-shadow: var(--shadow-sm); background: #fff; }
+.wallet.connected { background: #fff; color: var(--ink); border-color: var(--line); padding: 6px 16px 6px 6px; }
+.wallet.connected:hover { border-color: var(--ink-soft); box-shadow: var(--shadow); }
+
+.wallet-menu-account {
+  display: flex; align-items: center; gap: 12px; padding: 14px; margin: 4px 0 20px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+}
+.wallet-menu-account .mono { font-size: 13px; word-break: break-all; }
+.wallet-menu-actions { display: flex; flex-direction: column; gap: 10px; }
+.wallet-menu-actions button { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+button.ghost.danger { color: var(--rose); border-color: #f3c6cf; }
+button.ghost.danger:hover:not(:disabled) { background: var(--rose-wash); border-color: var(--rose); }
 
 .avatar {
   display: inline-block; flex: none; border-radius: 50%;

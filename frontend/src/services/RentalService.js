@@ -45,6 +45,9 @@ import { MockRentalService } from "./MockRentalService.js";
  * @property {() => Promise<string>} connect - yeu cau ket noi vi, tra ve dia chi dang chon
  * @property {() => string|null} getAccount - dia chi dang ket noi hien tai (cache, khong async)
  * @property {(cb: (addr: string|null) => void) => (() => void)} onAccountsChanged - dang ky lang nghe doi tai khoan, tra ve ham huy dang ky
+ * @property {() => void} disconnect - ngat ket noi o muc ung dung (khong thu hoi quyen MetaMask that su)
+ * @property {[(() => Promise<string|null>)]} [tryReconnect] - chi ChainRentalService co: khoi phuc session khi F5 ma khong hien popup
+ * @property {[(() => Promise<string|null>)]} [requestAccountSwitch] - chi ChainRentalService co: mo lai popup chon tai khoan MetaMask
  * @property {() => Promise<Property[]>} loadProperties
  * @property {() => Promise<HistoryEvent[]>} loadHistory
  * @property {(input: {title: string, location: string, rent: string, deposit: string, imageCID?: string, note?: string}) => Promise<void>} listProperty

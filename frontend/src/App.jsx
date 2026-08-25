@@ -14,14 +14,20 @@ function AppShell() {
   const {
     isMock, isConfigured, mockAccounts, switchMockAccount,
     account, properties, history, busy, toast,
-    connect, listProperty,
+    connect, disconnect, canSwitchWallet, switchWallet, listProperty,
   } = useRental();
   const [tab, setTab] = useState("browse");
   const [selectedTx, setSelectedTx] = useState(null);
 
   return (
     <div className="app">
-      <TopBar account={account} onConnect={connect} />
+      <TopBar
+        account={account}
+        onConnect={connect}
+        onDisconnect={disconnect}
+        onSwitchWallet={switchWallet}
+        canSwitchWallet={canSwitchWallet}
+      />
 
       <ModeBanner
         isMock={isMock}

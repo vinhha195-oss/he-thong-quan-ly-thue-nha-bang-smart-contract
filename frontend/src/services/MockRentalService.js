@@ -45,6 +45,11 @@ export class MockRentalService {
     return this.#account;
   }
 
+  /** Chi de dong bo interface voi ChainRentalService - o mock mode nut "Ket noi lai" se tu connect() lai ngay. */
+  disconnect() {
+    this.#account = null;
+  }
+
   onAccountsChanged(cb) {
     this.#listeners.add(cb);
     return () => this.#listeners.delete(cb);
