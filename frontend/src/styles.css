@@ -54,7 +54,7 @@ body {
   border-radius: 6px;
 }
 
-.app { max-width: 1000px; margin: 0 auto; padding: 0 20px 96px; }
+.app { max-width: 1600px; margin: 0 auto; padding: 0 32px 96px; }
 
 /* Topbar */
 .topbar {
@@ -147,6 +147,8 @@ body {
 
 /* Card */
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 26px; box-shadow: var(--shadow); }
+/* Form o cho rieng - khong nen keo dai het chieu ngang man hinh rong, cac o nhap se qua khong ro */
+.form { max-width: 640px; margin: 0 auto; }
 .card h2 { font-family: "Space Grotesk", sans-serif; font-size: 19px; margin-bottom: 4px; }
 .hint { font-size: 13px; color: var(--ink-soft); margin-bottom: 18px; }
 
@@ -213,7 +215,7 @@ button.ghost:disabled { opacity: .5; cursor: not-allowed; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Property grid */
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
 .property {
   padding-top: 0; overflow: hidden; display: flex; flex-direction: column;
   transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease);
