@@ -22,7 +22,7 @@ export function TopBar({ account, onConnect, onDisconnect, onSwitchWallet, canSw
       <div className="brand">
         <div className="logo">◈</div>
         <div>
-          <h1>Sổ thuê nhà</h1>
+          <h1>Hệ thống quản lý thuê nhà bằng smart contract</h1>
           <p>Đặt cọc &amp; thanh toán trên blockchain</p>
         </div>
       </div>
