@@ -108,6 +108,13 @@ export function RentalProvider({ children }) {
       await fn({ onPending: () => notify("Đang xử lý giao dịch…", "info") });
       notify(okMsg, "success");
       await loadData();
+      // O che do chain that, RPC cua vi (thuong la mot cum nhieu node phia sau load
+      // balancer) doi luc chua kip dong bo ngay sau khi tx vua duoc xac nhan - lan doc
+      // dau co the "hut" mot nhip. Tu doc lai lan 2 sau 1 chut de UI tu "vao" dung du
+      // lieu thay vi bat nguoi dung phai tu F5 (khong can voi mock, luon nhat quan).
+      if (!service.isMock) {
+        setTimeout(() => { loadData(); }, 1500);
+      }
       return true;
     } catch (e) {
       notify(e.reason || e.shortMessage || e.message, "error");
