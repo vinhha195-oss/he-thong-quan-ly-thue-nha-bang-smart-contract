@@ -10,6 +10,7 @@ flowchart LR
 
     subgraph RentalManager["Hệ thống quản lý thuê nhà (smart contract)"]
         UC1[Đăng tài sản cho thuê]
+        UC1b[Huỷ tin đăng nhầm\nkhi chưa ai đặt cọc]
         UC2[Đặt cọc / kích hoạt hợp đồng]
         UC3[Trả tiền thuê định kỳ\n+ phạt nếu trễ hạn]
         UC4[Xác nhận bàn giao]
@@ -20,6 +21,7 @@ flowchart LR
     end
 
     Landlord --> UC1
+    Landlord --> UC1b
     Landlord --> UC5
     Landlord --> UC6
     Tenant --> UC2
@@ -50,7 +52,7 @@ flowchart TB
         HistoryTable
     end
 
-    Context["RentalContext (context/RentalContext.jsx)\nstate: account, properties, history, busy, toast, isArbiter\naction: connect, listProperty, rentProperty, payRent,\nconfirmHandover, proposeSettlement, acceptSettlement,\ndisputeSettlement, voteOnDispute"]
+    Context["RentalContext (context/RentalContext.jsx)\nstate: account, properties, history, busy, toast, isArbiter\naction: connect, disconnect, switchWallet, listProperty,\ncancelListing, rentProperty, payRent, confirmHandover,\nproposeSettlement, acceptSettlement, disputeSettlement, voteOnDispute"]
 
     Factory["getRentalService() — services/RentalService.js\nchọn service theo VITE_USE_MOCK + CONTRACT_ABI"]
 

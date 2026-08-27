@@ -317,7 +317,7 @@ web.
 npx hardhat test
 ```
 
-Bộ test (28 test case) kiểm tra: đặt cọc đúng/sai số tiền, tiền cọc do contract giữ, trả
+Bộ test (32 test case) kiểm tra: đặt cọc đúng/sai số tiền, tiền cọc do contract giữ, trả
 tiền chuyển đúng chủ nhà, phạt trả trễ (dùng time-travel mô phỏng quá hạn), luồng đề
 xuất/đồng ý/khiếu nại/trọng tài bỏ phiếu (multisig N-trong-M), và chặn các trường hợp
 gian lận.

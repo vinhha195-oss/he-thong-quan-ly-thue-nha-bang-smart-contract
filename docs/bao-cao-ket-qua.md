@@ -6,8 +6,11 @@
 động hoá việc giữ tiền cọc, thu tiền thuê định kỳ, xác nhận bàn giao và tất toán hợp
 đồng — thay thế cho việc phải "tin tưởng" một bên trung gian là con người. Toàn bộ 8
 chức năng tối thiểu **và cả 3 chức năng nâng cao** theo đề bài đã hoàn thành, có test
-tự động; hệ thống đã deploy thật lên **Sepolia testnet**, có giao diện web kết nối
-MetaMask, có backend index dữ liệu on-chain, và đã qua một vòng rà soát bảo mật.
+tự động (32 test); hệ thống đã deploy thật lên **Sepolia testnet**, có giao diện web
+kết nối MetaMask, có backend index dữ liệu on-chain, và đã qua một vòng rà soát bảo mật.
+Ngoài 11 chức năng theo đề bài, có thêm `cancelListing` — cho phép chủ nhà huỷ một tin
+đăng nhầm (vd sai giá) trước khi có người đặt cọc, giải quyết hạn chế thực tế của
+blockchain là dữ liệu **không sửa được sau khi ghi** (xem mục 4.3).
 
 ## 2. Mục tiêu & phạm vi
 
@@ -32,7 +35,7 @@ Xem chi tiết bài toán, actor, và phạm vi chức năng tại
 | Frontend | ReactJS + Vite, ethers.js v6, MetaMask | Tách UI khỏi nguồn dữ liệu qua lớp `RentalService` (interface chung cho `MockRentalService`/`ChainRentalService`); đã test thật với 2 ví MetaMask trên 2 trình duyệt (chủ nhà/người thuê) |
 | Backend | Node.js + TypeScript, Express, `node:sqlite` | Event indexer + REST API, không phải nguồn dữ liệu chính — chỉ là lớp chỉ mục để tra cứu nhanh |
 | Lưu tệp | IPFS (`Property.imageCID`) | Ảnh phòng (không bắt buộc, chọn được nhiều ảnh) tham chiếu bằng danh sách CID cách nhau dấu phẩy; upload trực tiếp qua Pinata nếu người dùng tự cấu hình `VITE_PINATA_JWT`, hoặc dán CID đã upload sẵn |
-| Test | Hardhat Test + Chai (Mocha) | 28 test case, bao gồm time-travel test cho phạt trễ hạn |
+| Test | Hardhat Test + Chai (Mocha) | 32 test case, bao gồm time-travel test cho phạt trễ hạn |
 | Bảo mật | Slither (gặp giới hạn tương thích) + rà soát thủ công | Xem mục 6 |
 | Quản lý mã nguồn | Git/GitHub | Đã push, repo công khai/riêng tư trên GitHub |
 | Triển khai frontend | Vercel | Tự động deploy lại khi push lên `main` |
@@ -75,9 +78,20 @@ cọc bao nhiêu, ai được trả tiền, khấu trừ thế nào, ai là tr�
 
 Chi tiết thiết kế & đánh đổi: [gioi-han-va-rui-ro.md § 3](./gioi-han-va-rui-ro.md#3-chức-năng-nâng-cao-đã-triển-khai).
 
+### 4.3. Chức năng bổ sung: `cancelListing` (huỷ tin đăng nhầm)
+
+Các trường của `Property` (giá, cọc, mô tả...) chỉ ghi được **một lần** trong
+`listProperty` — đúng bản chất bất biến của blockchain, nhưng phát sinh vấn đề thực tế:
+đăng nhầm giá thì tin đó nằm sai vĩnh viễn, kể cả chủ nhà cũng không tự thuê được tin
+của chính mình để "dọn" nó đi (`rentProperty` chặn `msg.sender == p.landlord`).
+`cancelListing(id)` cho phép đúng chủ nhà huỷ tin **khi còn `Listed`** (chưa ai đặt
+cọc), chuyển sang trạng thái `Cancelled` mới — không chuyển tiền, không ảnh hưởng các
+tin khác. Có 4 test riêng (chủ nhà huỷ được, người khác không huỷ được, không huỷ được
+tin đã có người thuê, tin đã huỷ không thuê được nữa).
+
 ## 5. Kết quả kiểm thử
 
-Chạy `npx hardhat test` — **28/28 test pass**, bao gồm:
+Chạy `npx hardhat test` — **32/32 test pass**, bao gồm:
 
 - Nghiệp vụ cơ bản: đăng tin, đặt cọc (đúng/sai số tiền), chặn chủ nhà tự thuê, tiền cọc
   giữ ở contract, trả tiền đúng hạn.
@@ -91,6 +105,8 @@ Chạy `npx hardhat test` — **28/28 test pass**, bao gồm:
 - Token đại diện hợp đồng: mint đúng người, không chuyển nhượng được (cả 2 overload
   `safeTransferFrom`), tồn tại sau khi kết thúc.
 - Bảo mật: chống reentrancy khi mint token trong `rentProperty`.
+- **Huỷ tin đăng (`cancelListing`)**: chủ nhà huỷ được tin còn trống, người khác không
+  huỷ được, không huỷ được tin đã có người thuê, tin đã huỷ không cho thuê lại được.
 
 ## 6. Bảo mật
 
@@ -121,6 +137,14 @@ Chạy `npx hardhat test` — **28/28 test pass**, bao gồm:
   contract Sepolia này (không còn dùng chế độ dữ liệu mẫu). Đã kiểm thử thật bằng 2 ví
   MetaMask trên 2 trình duyệt khác nhau đóng vai chủ nhà/người thuê — xem kịch bản chi
   tiết tại [README.md § Kịch bản demo](../README.md#kịch-bản-demo-5–10-phút--2-trình-duyệt-dữ-liệu-thật-trên-sepolia).
+- **Đã deploy lại Sepolia nhiều lần trong quá trình phát triển** (thêm chức năng nâng
+  cao trọng tài/phạt trễ/multisig, rồi thêm `cancelListing`) — mỗi lần contract đổi mã
+  nguồn (khác constructor hoặc không) đều cần deploy lại vì contract không có proxy/cơ
+  chế nâng cấp, địa chỉ contract vì vậy cũng đổi theo mỗi lần. Đã viết
+  `scripts/relist-from-old-contract.ts` để tự động đăng lại các tin còn ở trạng thái
+  `Listed` từ contract cũ sang contract mới (giảm thời gian đăng lại thủ công), và
+  `scripts/grant-arbiter.ts` / `scripts/revoke-arbiter.ts` để quản lý `ARBITER_ROLE`
+  sau mỗi lần deploy.
 
 ## 8. Mã nguồn & cấu trúc thư mục
 
@@ -138,6 +162,13 @@ Xem đầy đủ tại [gioi-han-va-rui-ro.md](./gioi-han-va-rui-ro.md) và
   phản ứng nếu trọng tài thông đồng.
 - `ARBITER_ROLE` do admin (ví deploy) tự chỉ định — rủi ro tập trung quyền lực nếu khoá
   admin bị lộ.
+- **Contract không tự chặn xung đột lợi ích khi bỏ phiếu trọng tài**: `voteOnDispute`
+  chỉ kiểm tra `ARBITER_ROLE`, không kiểm tra người bỏ phiếu có phải chính chủ
+  nhà/người thuê của tranh chấp đó không. Vấn đề này thực sự xảy ra khi test (ví
+  admin/chủ nhà tự vote được cho tranh chấp của mình, vì admin mặc định có
+  `ARBITER_ROLE`) — đã giảm thiểu bằng quản trị vai trò (thu hồi quyền khỏi ví admin,
+  cấp cho ví độc lập), chưa sửa tận gốc ở contract. Chi tiết:
+  [gioi-han-va-rui-ro.md § 4](./gioi-han-va-rui-ro.md#4-rủi-ro-còn-tồn-tại--chưa-xử-lý).
 - Chỉ hỗ trợ thanh toán bằng ETH.
 - Chưa có cơ chế tạm dừng khẩn cấp (`Pausable`), chưa có multisig cho ví admin.
 - Slither không chạy tự động được (xem mục 6); chưa có audit độc lập từ bên ngoài; chưa
@@ -148,8 +179,10 @@ Xem đầy đủ tại [gioi-han-va-rui-ro.md](./gioi-han-va-rui-ro.md) và
 ## 10. Kết luận
 
 Hệ thống đáp ứng đầy đủ **8/8 chức năng tối thiểu và 3/3 chức năng nâng cao** theo đề
-bài, có kiến trúc tách UI/BE rõ ràng, có bộ test tự động bao phủ cả nghiệp vụ lẫn bảo
-mật (28 test), đã **deploy thật lên Sepolia** và kiểm thử bằng ví thật trên 2 trình
-duyệt, và đã được rà soát bảo mật (dù công cụ tự động Slither gặp giới hạn kỹ thuật, đã
-có rà soát thủ công thay thế và ghi nhận minh bạch). Các giới hạn còn lại (time lock
-trọng tài, multisig admin, audit độc lập...) đã được liệt kê trung thực, không tick giả.
+bài (cộng thêm `cancelListing` ngoài yêu cầu), có kiến trúc tách UI/BE rõ ràng, có bộ
+test tự động bao phủ cả nghiệp vụ lẫn bảo mật (32 test), đã **deploy thật lên Sepolia**
+và kiểm thử bằng ví thật trên nhiều trình duyệt/tài khoản, và đã được rà soát bảo mật
+(dù công cụ tự động Slither gặp giới hạn kỹ thuật, đã có rà soát thủ công thay thế và
+ghi nhận minh bạch). Các giới hạn còn lại (time lock trọng tài, multisig admin, xung đột
+lợi ích khi bỏ phiếu chưa chặn ở contract, audit độc lập...) đã được liệt kê trung
+thực, không tick giả.

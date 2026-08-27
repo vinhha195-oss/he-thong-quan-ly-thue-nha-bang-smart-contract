@@ -67,6 +67,20 @@ chính (đăng tin/thuê/trả tiền) vẫn hoàn toàn phi tập trung, không
 - **Không có time lock / hạn chót cho `confirmHandover`**: người thuê có thể trì hoãn
   xác nhận bàn giao vô thời hạn, khiến chủ nhà không đề xuất tất toán được để cho thuê
   lại.
+- **Xung đột lợi ích: contract không tự chặn chủ nhà/người thuê bỏ phiếu trọng tài cho
+  chính tranh chấp của mình**. `voteOnDispute` chỉ kiểm tra `ARBITER_ROLE`, không kiểm
+  tra `msg.sender != p.landlord && msg.sender != p.tenant`. Vấn đề này **đã xảy ra thật**
+  trong lúc test: ví admin (đồng thời cũng là chủ nhà của nhiều tin đăng) tự bỏ phiếu
+  được cho tranh chấp của chính mình, vì `ARBITER_ROLE` được cấp mặc định cho admin lúc
+  deploy (`_grantRole(ARBITER_ROLE, admin)` trong constructor). Đã **giảm thiểu bằng
+  quản trị vai trò** (không sửa contract, không cần deploy lại): thu hồi `ARBITER_ROLE`
+  khỏi ví admin/chủ nhà (`scripts/revoke-arbiter.ts`), cấp lại cho một ví thứ 3 hoàn
+  toàn độc lập, không phải chủ nhà/người thuê của bất kỳ tin nào. Đây chỉ là biện pháp
+  **vận hành** (kỷ luật cấp quyền thủ công), không phải ràng buộc **cưỡng chế trên
+  contract** — một admin tương lai vẫn có thể lỡ cấp `ARBITER_ROLE` cho một địa chỉ đang
+  là chủ nhà/người thuê. Cách khắc phục triệt để (chưa làm, cần sửa contract + deploy
+  lại): thêm `require(msg.sender != p.landlord && msg.sender != p.tenant)` ngay trong
+  `voteOnDispute`.
 - **Front-running về lý thuyết**: hai người thuê cùng gửi `rentProperty` cho cùng một
   `id` gần như đồng thời — giao dịch tới sau sẽ tự động revert (vì `status` đã đổi
   thành `Active`), không mất tiền, nhưng trải nghiệm người dùng chưa tối ưu (không có
