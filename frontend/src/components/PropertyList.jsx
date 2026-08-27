@@ -1,8 +1,14 @@
 import { useMemo, useState } from "react";
 import { PropertyCard } from "./PropertyCard.jsx";
 import { PropertyDetailModal } from "./PropertyDetailModal.jsx";
+import { useRental } from "../hooks/useRental.js";
+import { sameAddr } from "../utils/address.js";
+import { STATUS } from "../utils/constants.js";
 
 const PAGE_SIZE = 8;
+
+// "Tat ca" (null) + tung trang thai theo dung thu tu enum Status trong contract.
+const STATUS_FILTERS = [null, 0, 1, 2, 4, 3, 5];
 
 const SEARCH_ICON = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -22,7 +28,10 @@ function pageNumbers(current, total) {
 }
 
 export function PropertyList({ properties, history, onSelectTx }) {
+  const { account } = useRental();
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState(null); // null = tat ca
+  const [onlyMine, setOnlyMine] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState(null);
   // Lay lai property theo id tu mang properties (moi nhat) thay vi giu snapshot cu,
@@ -32,24 +41,50 @@ export function PropertyList({ properties, history, onSelectTx }) {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const matched = q
+    let matched = q
       ? properties.filter(
           (p) => p.title?.toLowerCase().includes(q) || p.location?.toLowerCase().includes(q),
         )
       : properties;
+    if (statusFilter != null) matched = matched.filter((p) => p.status === statusFilter);
+    if (onlyMine) matched = matched.filter((p) => sameAddr(p.landlord, account) || sameAddr(p.tenant, account));
     // Tin moi dang (id lon hon) hien len truoc, khong bat nguoi dung phai luot qua
     // het cac trang cu moi thay tin vua dang.
     return [...matched].sort((a, b) => b.id - a.id);
-  }, [properties, query]);
+  }, [properties, query, statusFilter, onlyMine, account]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const changeQuery = (v) => { setQuery(v); setPage(1); };
+  const changeStatusFilter = (v) => { setStatusFilter(v); setPage(1); };
+  const toggleOnlyMine = () => { setOnlyMine((v) => !v); setPage(1); };
 
   return (
     <section>
+      <div className="filter-row">
+        <div className="role-switch">
+          {STATUS_FILTERS.map((s) => (
+            <button
+              key={s ?? "all"}
+              className={statusFilter === s ? "on" : ""}
+              onClick={() => changeStatusFilter(s)}
+            >
+              {s == null ? "Tất cả" : STATUS[s]}
+            </button>
+          ))}
+        </div>
+        <button
+          className={`ghost small${onlyMine ? " on" : ""}`}
+          disabled={!account}
+          onClick={toggleOnlyMine}
+          title={account ? "Chỉ hiện tin tôi là chủ nhà hoặc người thuê" : "Kết nối ví để lọc"}
+        >
+          Chỉ của tôi
+        </button>
+      </div>
+
       <div className="search-row">
         <div className="search-box">
           {SEARCH_ICON}
