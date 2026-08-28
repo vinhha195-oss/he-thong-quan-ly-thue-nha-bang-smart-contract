@@ -69,7 +69,7 @@ thường phát hiện (reentrancy, access control, unchecked call, zero-address
 
 | # | Hạng mục | Kết quả | Phân loại |
 |---|---|---|---|
-| 1 | Reentrancy ở `rentProperty`/`payRent`/`endLease` | Có `nonReentrant` + checks-effects-interactions (state cập nhật trước khi gọi `.call{value:}` hoặc `mintAgreement`) | **Accepted — đã xử lý** |
+| 1 | Reentrancy ở `rentProperty`/`payRent`/`acceptSettlement`/`voteOnDispute` (chuyển ETH) | Có `nonReentrant` + checks-effects-interactions (state cập nhật trước khi gọi `.call{value:}` hoặc `mintAgreement`) | **Accepted — đã xử lý** |
 | 2 | Giá trị trả về của low-level `.call{value:}` | Luôn kiểm tra bằng `require(ok, ...)`, không bỏ qua | **Accepted — đã xử lý** |
 | 3 | `mintAgreement()` gọi trong `rentProperty` không bọc try/catch | Nếu mint revert (vd `RentalManager` chưa được cấp `MINTER_ROLE`), cả giao dịch `rentProperty` revert theo — đây là hành vi **mong muốn** (fail-closed, không cho kích hoạt hợp đồng nếu không tạo được token bằng chứng) | **False positive — đúng thiết kế** |
 | 4 | Địa chỉ `0x0` cho `tenant` khi mint | Không kiểm tra tường minh trong `RentalManager`, nhưng `ERC721._safeMint` (OpenZeppelin) tự revert nếu `to == address(0)` | **Accepted — đã có bảo vệ ở tầng dưới** |
@@ -79,14 +79,17 @@ thường phát hiện (reentrancy, access control, unchecked call, zero-address
 | 8 | Double-mint cùng `tokenId` | Không tự kiểm tra tường minh trong `RentalManager`, nhưng `_safeMint` của OpenZeppelin tự revert nếu token đã tồn tại — về logic nghiệp vụ, một `propertyId` chỉ có thể đạt `Status.Active` (điều kiện duy nhất gọi mint) đúng một lần trong vòng đời hiện tại | **Accepted — không khai thác được với logic hiện tại** |
 | 9 | Tập trung quyền lực ở `RentalAgreementToken.DEFAULT_ADMIN_ROLE` | Địa chỉ admin (mặc định là ví deploy) có toàn quyền `grantRole`/`revokeRole` cho `MINTER_ROLE` — nếu khoá riêng của admin bị lộ, kẻ tấn công có thể tự cấp quyền mint cho địa chỉ khác và tạo token "hợp đồng thuê" giả (không rút được tiền từ `RentalManager`, nhưng gây nhiễu dữ liệu lịch sử thuê) | **Confirmed — rủi ro tập trung quyền lực, cần multisig cho admin ở production** (xem `docs/production-checklist.md`) |
 | 10 | Thiếu cơ chế tạm dừng (`Pausable`) | Không có cách nào tạm dừng hệ thống nếu phát hiện lỗi nghiêm trọng sau khi deploy | **Confirmed — hạn chế đã biết, chưa khắc phục trong lần này** (xem `docs/production-checklist.md`) |
+| 11 | `cancelListing()` — chủ nhà tự huỷ tin của mình | Chỉ đổi `status`, không chuyển tiền, không ảnh hưởng tin khác; `require(msg.sender == p.landlord)` + `require(status == Listed)` chặn đúng | **Accepted — đã xử lý** |
+| 12 | `voteOnDispute()` không kiểm tra người bỏ phiếu có phải chính chủ nhà/người thuê của tranh chấp đó không — chỉ kiểm tra `ARBITER_ROLE` | **Phát hiện thật trong lúc test** (không phải lý thuyết): ví admin (đồng thời là chủ nhà) tự bỏ phiếu được cho tranh chấp của chính mình vì `ARBITER_ROLE` được cấp mặc định cho admin lúc deploy | **Confirmed — xung đột lợi ích, đã giảm thiểu bằng thu hồi/cấp lại vai trò (`scripts/revoke-arbiter.ts`), CHƯA chặn ở mức contract** (xem `docs/gioi-han-va-rui-ro.md § 4`) |
 
 ## 4. Kết luận
 
 Không phát hiện lỗi **Confirmed vulnerability** nghiêm trọng (mất tiền/khoá tiền) qua rà
-soát thủ công. Hai điểm được đánh dấu **Confirmed** (#9, #10) là rủi ro vận hành/quản trị
-đã biết trước, không phải lỗi runtime, và đã được đưa vào
-[docs/production-checklist.md](./production-checklist.md) như điều kiện bắt buộc phải xử
-lý trước khi triển khai production thật.
+soát thủ công. Ba điểm được đánh dấu **Confirmed** (#9, #10, #12) là rủi ro vận
+hành/quản trị/thiết kế đã biết trước — trong đó #12 là lỗi xung đột lợi ích thực sự đã
+xảy ra trong lúc test (không phải suy đoán lý thuyết) — và đã được đưa vào
+[docs/production-checklist.md](./production-checklist.md) / [docs/gioi-han-va-rui-ro.md](./gioi-han-va-rui-ro.md)
+như điều kiện bắt buộc phải xử lý trước khi triển khai production thật.
 
 Rà soát thủ công **không thay thế được** một audit độc lập hoặc phân tích tĩnh tự động
 đầy đủ — đây vẫn là việc cần làm trước khi triển khai production (xem checklist).

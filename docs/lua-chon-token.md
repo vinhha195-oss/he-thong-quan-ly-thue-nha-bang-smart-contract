@@ -77,21 +77,30 @@ Lợi ích: **frontend hoàn toàn không cần biết đến khái niệm "toke
 trong `ChainRentalService`, `MockRentalService`, `RentalContext`, các component đều chỉ
 dùng `id` như trước khi tách contract, không phải sửa gì cả.
 
-## 5. Vì sao `RentalManager` không dùng `AccessControl` (khác với ví dụ chứng chỉ)
+## 5. `RentalManager` dùng `AccessControl` ở đúng 1 chỗ — không phải cho toàn bộ nghiệp vụ
 
-Ví dụ minh hoạ (chứng chỉ) dùng `ISSUER_ROLE`/`REVOKER_ROLE` vì đó là mô hình **có cấp
-phép** — chỉ tổ chức được uỷ quyền mới được cấp chứng chỉ. Thuê nhà là mô hình **không
-cấp phép** (permissionless): bất kỳ ai cũng có thể đăng tin cho thuê và trở thành "chủ
-nhà" của property đó — không có admin nào phải duyệt trước.
+Ví dụ minh hoạ (chứng chỉ) dùng `ISSUER_ROLE`/`REVOKER_ROLE` cho **toàn bộ** thao tác
+cấp/thu hồi, vì đó là mô hình **có cấp phép** hoàn toàn. Thuê nhà thì khác: nghiệp vụ
+chính (`listProperty`, `rentProperty`, `payRent`, `confirmHandover`, đề xuất/đồng ý/khiếu
+nại tất toán) vẫn **hoàn toàn không cấp phép** (permissionless) — bất kỳ ai cũng đăng
+tin/thuê được, quyền hạn xác định **bằng dữ liệu** (`msg.sender == p.landlord/tenant`),
+không cần admin duyệt trước.
 
-Vì vậy quyền hạn trong `RentalManager` được xác định **bằng dữ liệu** (ví dụ
-`msg.sender == p.landlord`), không phải bằng vai trò được cấp trước qua
-`AccessControl`. Đây là khác biệt nghiệp vụ có chủ đích, không phải thiếu sót so với
-quy trình mẫu.
+*(Cập nhật khi thêm chức năng nâng cao)*: sau khi bổ sung cơ chế trọng tài (multisig cho
+tranh chấp), `RentalManager` **giờ có dùng `AccessControl`** — nhưng chỉ cho đúng 1 vai
+trò `ARBITER_ROLE`, giới hạn ở đúng 1 hàm (`voteOnDispute`). Đây là ngoại lệ có chủ đích:
+bỏ phiếu xử lý tranh chấp buộc phải có bên được tin cậy trước (không thể để "ai cũng bỏ
+phiếu được"), khác hẳn với việc đăng tin/thuê nhà — vẫn giữ đúng triết lý "chỉ cấp phép ở
+chỗ thực sự cần một bên được tin cậy trước", không cấp phép tràn lan cho cả hệ thống.
 
-`AccessControl` chỉ thực sự cần thiết ở **`RentalAgreementToken`** — để giới hạn quyền
+`AccessControl` còn được dùng ở **`RentalAgreementToken`** — để giới hạn quyền
 `mintAgreement()` chỉ cho `RentalManager` gọi được (`MINTER_ROLE`), tương tự cách ví dụ
 chứng chỉ giới hạn quyền mint chỉ cho `CertificateManager`.
+
+Vậy tổng cộng có **2 chỗ** dùng `AccessControl` trong toàn hệ thống: `MINTER_ROLE`
+(token) và `ARBITER_ROLE` (nghiệp vụ trọng tài) — không phải 1 như thiết kế ban đầu, vì
+chức năng nâng cao trọng tài được thêm sau. Chi tiết luồng trọng tài:
+[gioi-han-va-rui-ro.md § 3.1](./gioi-han-va-rui-ro.md#31-cơ-chế-trọng-tài-khi-có-tranh-chấp-multisig-cho-giải-ngân-tiền-cọc).
 
 ## 6. Kết luận
 
@@ -101,5 +110,5 @@ chứng chỉ giới hạn quyền mint chỉ cho `CertificateManager`.
 | Chuyển nhượng | **Không** (khoá qua `_update`, không có `approve`/burn) |
 | Cách sinh `tokenId` | Trùng với `propertyId` (mỗi property chỉ thuê một lần) |
 | Ai được mint | Chỉ `RentalManager` (`MINTER_ROLE`) |
-| `RentalManager` có `AccessControl` không | Không — nghiệp vụ chính permissionless, quyền hạn xác định bằng dữ liệu |
+| `RentalManager` có `AccessControl` không | **Có, nhưng chỉ 1 vai trò** (`ARBITER_ROLE`, giới hạn ở `voteOnDispute`) — nghiệp vụ chính (đăng tin/thuê/trả tiền) vẫn permissionless, quyền hạn xác định bằng dữ liệu |
 | Thư viện | OpenZeppelin Contracts 5.x (`ERC721`, `AccessControl`) |

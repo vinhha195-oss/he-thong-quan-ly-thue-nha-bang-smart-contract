@@ -25,10 +25,13 @@ rental-dapp/
 ├── contracts/
 │   ├── RentalManager.sol            # Nghiệp vụ: đăng/thuê/trả tiền/bàn giao/tất toán
 │   └── RentalAgreementToken.sol     # ERC-721 không chuyển nhượng, đại diện 1 hợp đồng thuê
+├── contracts/mocks/MaliciousReceiver.sol # Contract độc hại dùng riêng để test chống reentrancy
 ├── ignition/modules/RentalSystem.ts # Triển khai 2 contract + cấp MINTER_ROLE (Hardhat Ignition)
 ├── scripts/sync-frontend-config.ts  # Đọc dia chỉ đã deploy, ghi sang frontend/src/config.js
 ├── scripts/grant-arbiter.ts         # Cấp ARBITER_ROLE cho 1 địa chỉ (multisig cần ≥2 trọng tài)
-├── test/RentalManager.test.ts       # Bộ test TypeScript (Hardhat 3 + Mocha)
+├── scripts/revoke-arbiter.ts        # Thu hồi ARBITER_ROLE (vd khỏi ví admin, tránh xung đột lợi ích)
+├── scripts/relist-from-old-contract.ts # Đăng lại các tin còn "Listed" từ contract cũ sau khi deploy lại
+├── test/RentalManager.test.ts       # Bộ test TypeScript (Hardhat 3 + Mocha, 32 test)
 ├── hardhat.config.ts                # Mạng: localhost + sepolia (bí mật qua Hardhat keystore)
 ├── backend/                         # Event indexer + REST API (SQLite) — tuỳ chọn, xem Bước 4
 ├── docs/                            # Phân tích bài toán, chọn loại token, use case/kiến
@@ -68,8 +71,11 @@ tiết sơ đồ kiến trúc: [docs/kien-truc-va-usecase.md](docs/kien-truc-va-
 
 Muốn chỉnh sửa/xem giao diện ngay mà chưa cần chạy blockchain? Mặc định, khi
 `frontend/src/config.js` **chưa có ABI thật** (tức chưa deploy), ứng dụng tự động dùng
-`MockRentalService` (`frontend/src/services/MockRentalService.js`) với dữ liệu mẫu — 4
-phòng ở đủ 4 trạng thái (`Listed/Active/HandedOver/Ended`) + lịch sử giao dịch mẫu:
+`MockRentalService` (`frontend/src/services/MockRentalService.js`) với dữ liệu mẫu — hơn
+20 phòng đủ trạng thái (`Listed/Active/HandedOver/Disputed/Ended/Cancelled`) + lịch sử
+giao dịch mẫu. Kỳ hạn thuê chỉ 120 giây (thay vì 30 ngày thật) nên **test được phạt trả
+trễ và multisig trọng tài gần như ngay lập tức** — có sẵn 1 phòng cấu hình quá hạn từ
+đầu và 1 phòng đã có đề xuất tất toán chờ phản hồi, không cần thao tác gì trước:
 
 ```bash
 cd frontend
@@ -206,6 +212,15 @@ ARBITER_ADDRESS=0xDiaChiViKhac npx hardhat run scripts/grant-arbiter.ts --networ
 (Đổi `--network sepolia` thành `--network localhost` nếu đang test trên máy.) Có thể
 gọi lại nhiều lần với các địa chỉ khác nhau để có nhiều trọng tài.
 
+**Lưu ý xung đột lợi ích**: ví admin (ví deploy) mặc định cũng có `ARBITER_ROLE` — nếu
+ví đó cũng dùng để đóng vai chủ nhà lúc demo, nó sẽ tự bỏ phiếu được cho tranh chấp của
+chính mình (đã gặp thật trong quá trình test). Nên thu hồi quyền khỏi ví admin nếu ví đó
+cũng dùng làm chủ nhà, rồi cấp cho các ví trọng tài độc lập khác:
+
+```bash
+ARBITER_ADDRESS=0xDiaChiViAdmin npx hardhat run scripts/revoke-arbiter.ts --network sepolia
+```
+
 ---
 
 ## Deploy frontend lên Vercel (tự động deploy lại mỗi khi push)
@@ -265,10 +280,15 @@ Cả 2 đều mở link Vercel, đảm bảo MetaMask đang chọn đúng mạng
 1. **[A] Chủ nhà** → tab *Đăng cho thuê* → điền: mô tả phòng, khu vực, tiền thuê
    `0.001`, cọc `0.002` — có thể thêm ảnh (chọn file) và ghi chú để demo đủ tính
    năng → **Đăng tài sản** → xác nhận giao dịch trên MetaMask.
-2. **[B] Người thuê** → tab *Danh sách phòng* → dùng ô tìm kiếm nếu cần → bấm vào
-   phòng vừa tạo để xem chi tiết (ảnh, ghi chú, đầy đủ thông tin) → **Đặt cọc &
-   thuê** → xác nhận trên MetaMask. Chú ý: 0.002 ETH bị khóa trong hợp đồng, chưa
-   vào ví chủ nhà.
+   - *(Tuỳ chọn, demo `cancelListing`)*: đăng thêm 1 tin nữa cố tình sai giá, rồi ở
+     tab *Danh sách phòng* bấm **"Hủy tin"** trên đúng tin đó (chỉ chủ nhà thấy nút
+     này, chỉ dùng được khi chưa ai đặt cọc) — trạng thái chuyển "Đã hủy", không thuê
+     lại được nữa. Dùng bộ lọc trạng thái/"Chỉ của tôi" phía trên danh sách để tìm
+     nhanh tin vừa đăng giữa nhiều tin khác.
+2. **[B] Người thuê** → tab *Danh sách phòng* → dùng ô tìm kiếm hoặc bộ lọc trạng
+   thái nếu cần → bấm vào phòng vừa tạo để xem chi tiết (ảnh, ghi chú, đầy đủ thông
+   tin) → **Đặt cọc & thuê** → xác nhận trên MetaMask. Chú ý: 0.002 ETH bị khóa
+   trong hợp đồng, chưa vào ví chủ nhà.
 3. **[B] Người thuê** → **Trả tiền thuê** (0.001 ETH chảy thẳng sang ví chủ nhà,
    kiểm tra số dư ví A tăng lên ngay).
 4. **[B] Người thuê** → **Xác nhận bàn giao**.
@@ -294,11 +314,14 @@ không phải trọng tài), thử trả tiền thuê hộ, tự bỏ phiếu tr
 từ smart contract, không cần ai kiểm duyệt thủ công. Cũng có thể thử khấu trừ vượt quá
 tiền cọc để thấy giao dịch bị từ chối.
 
-**Phạt thanh toán trễ**: mặc định `rentPeriod` là 30 ngày thật nên không demo trực
-tiếp trên Sepolia trong vài phút được — nhưng có thể chứng minh bằng bộ test tự động
-(`npx hardhat test`, mục "Phạt thanh toán tre" dùng time-travel để mô phỏng quá hạn),
-hoặc deploy 1 bản Sepolia riêng cho demo với `rentPeriod` ngắn (vài phút) bằng file
-tham số Ignition, vd `params.json`:
+**Phạt thanh toán trễ**: mặc định `rentPeriod` trên Sepolia là 30 ngày thật nên không
+demo trực tiếp trong vài phút được. Cách dễ nhất cho video demo: chạy **chế độ dữ liệu
+mẫu** ở local (`cd frontend && npm run dev` với `VITE_USE_MOCK=true`, xem mục "Thiết kế
+UI bằng dữ liệu mẫu" ở trên) — kỳ hạn chỉ 120 giây, có sẵn 1 phòng quá hạn từ đầu, bấm
+"Trả tiền thuê" là thấy ngay phần phạt 5% cộng thêm. Ngoài ra có thể chứng minh bằng bộ
+test tự động (`npx hardhat test`, mục "Phạt thanh toán tre" dùng time-travel để mô
+phỏng quá hạn), hoặc deploy 1 bản Sepolia riêng cho demo với `rentPeriod` ngắn (vài
+phút) bằng file tham số Ignition, vd `params.json`:
 ```json
 { "RentalSystemModule": { "rentPeriodSeconds": 300 } }
 ```
@@ -342,6 +365,11 @@ gian lận.
 Cả 3 chức năng nâng cao theo đề bài đã triển khai: cơ chế trọng tài khi tranh chấp,
 phạt thanh toán trễ, và multisig cho việc giải ngân tiền cọc (`ARBITER_ROLE` +
 đếm phiếu N-trong-M on-chain, thay cho `TimelockController` được đề xuất ban đầu — đơn
-giản hơn, không cần contract phụ trợ). Giới hạn còn lại (time lock cho quyết định
-trọng tài, multisig cho ví admin, audit độc lập...) — xem chi tiết tại
+giản hơn, không cần contract phụ trợ). Có thêm 1 chức năng ngoài yêu cầu: huỷ tin đăng
+nhầm (`cancelListing`), giải quyết hạn chế dữ liệu on-chain không sửa lại được.
+
+Giới hạn còn lại — bao gồm cả một vấn đề **thực sự gặp phải khi test** (`voteOnDispute`
+không tự chặn chủ nhà/người thuê bỏ phiếu cho tranh chấp của chính mình; đã giảm thiểu
+bằng thu hồi/cấp lại `ARBITER_ROLE` chứ chưa sửa ở mức contract), time lock cho quyết
+định trọng tài, multisig cho ví admin, audit độc lập... — xem chi tiết tại
 [docs/gioi-han-va-rui-ro.md](docs/gioi-han-va-rui-ro.md).

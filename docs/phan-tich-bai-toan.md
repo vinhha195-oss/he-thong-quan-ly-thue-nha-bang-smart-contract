@@ -41,7 +41,8 @@ yếu chính:
 | Actor | Vai trò |
 |---|---|
 | **Chủ nhà (Landlord)** | Đăng tài sản cho thuê, nhận tiền thuê định kỳ, quyết định khấu trừ cọc khi kết thúc hợp đồng. |
-| **Người thuê (Tenant)** | Đặt cọc để kích hoạt hợp đồng, trả tiền thuê định kỳ, xác nhận bàn giao khi trả phòng. |
+| **Người thuê (Tenant)** | Đặt cọc để kích hoạt hợp đồng, trả tiền thuê định kỳ, xác nhận bàn giao khi trả phòng, có thể khiếu nại nếu không đồng ý mức khấu trừ. |
+| **Trọng tài (Arbiter)** | Địa chỉ được cấp `ARBITER_ROLE` (qua `grantRole`/`scripts/grant-arbiter.ts`) — bỏ phiếu quyết định mức khấu trừ khi có tranh chấp, chỉ có hiệu lực khi đủ số trọng tài độc lập đồng thuận (multisig). Không tham gia nghiệp vụ đăng tin/thuê/trả tiền. |
 | *(Người xem công khai)* | Bất kỳ ai cũng đọc được lịch sử giao dịch trên blockchain (tính minh bạch), nhưng không có quyền ghi. |
 
 ## 4. Phạm vi chức năng đã triển khai
@@ -59,6 +60,9 @@ yếu chính:
       `acceptSettlement`, hoặc → `disputeSettlement` → `voteOnDispute` nếu tranh chấp —
       xem mục 4.5)
 - [x] Theo dõi lịch sử thanh toán (đọc trực tiếp từ event trên blockchain, tab "Lịch sử")
+- [x] *(Bổ sung ngoài yêu cầu)* Huỷ tin đăng nhầm (`cancelListing`) — chủ nhà huỷ được
+      tin còn trống (chưa ai đặt cọc) khi lỡ đăng sai (vd sai giá); giải quyết hạn chế
+      thực tế là các trường của `Property` không sửa lại được sau khi ghi on-chain.
 
 ### 4.2. Token & tách kiến trúc (Bước 0–2 của quy trình)
 
@@ -96,6 +100,13 @@ yếu chính:
       phiếu trực tiếp on-chain, đơn giản hơn và không cần contract phụ trợ. Đánh đổi:
       không có độ trễ thời gian giữa lúc đủ phiếu và lúc thực thi — xem
       [gioi-han-va-rui-ro.md § 4](./gioi-han-va-rui-ro.md#4-rủi-ro-còn-tồn-tại--chưa-xử-lý).
+
+**Quản trị vai trò trọng tài**: `admin` (ví deploy) mặc định cũng là trọng tài #1 —
+trong quá trình test phát sinh vấn đề xung đột lợi ích thật (admin đồng thời là chủ nhà,
+tự bỏ phiếu được cho tranh chấp của chính mình). Đã khắc phục bằng quản trị vai trò
+(`scripts/revoke-arbiter.ts` thu hồi quyền khỏi admin, `scripts/grant-arbiter.ts` cấp
+cho ví độc lập) — chi tiết và giới hạn còn lại (chưa chặn ở mức contract) xem
+[gioi-han-va-rui-ro.md § 4](./gioi-han-va-rui-ro.md#4-rủi-ro-còn-tồn-tại--chưa-xử-lý).
 
 Các hạng mục còn thiếu cho production thật (Foundry fuzz test, audit độc lập,
 `Pausable`, multisig admin, PostgreSQL) được liệt kê đầy đủ tại

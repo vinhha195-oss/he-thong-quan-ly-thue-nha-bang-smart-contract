@@ -42,7 +42,9 @@ lớp chỉ mục.
 - `src/config.ts` — đọc biến môi trường.
 - `src/db.ts` — mở file SQLite bằng module `node:sqlite` tích hợp sẵn trong Node.js
   (không cần biên dịch native như `better-sqlite3`), tạo bảng nếu chưa có.
-- `src/abi.ts` — ABI tối thiểu của `RentalManager` (5 event + `getProperty`).
+- `src/abi.ts` — ABI tối thiểu của `RentalManager` (9 event + `getProperty`: `PropertyListed`,
+  `Rented`, `RentPaid`, `HandoverConfirmed`, `SettlementProposed`, `DisputeRaised`,
+  `DisputeVoteCast`, `LeaseEnded`, `ListingCancelled`).
 - `src/indexer.ts` — quét block theo con trỏ (`indexer_state.last_processed_block`),
   chờ `CONFIRMATIONS` block trước khi xử lý (tránh đọc phải block bị reorg), ghi event
   vào `blockchain_events` (idempotent nhờ `UNIQUE(transaction_hash, log_index)`), rồi
