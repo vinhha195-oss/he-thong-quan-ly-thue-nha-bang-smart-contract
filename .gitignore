@@ -9,3 +9,6 @@ frontend/.env
 *.lnk
 ignition/deployments/chain-31337/
 dist/
+
+# Tai lieu/bao cao/slide - nop rieng ngoai GitHub, khong dua vao repo code.
+/docs/
