@@ -8,13 +8,33 @@ import { short, eth, parseEth } from "../utils/format.js";
 // da tru DEPLOYMENT_BLOCK. Vi vay phai quet theo tung doan nho, khong quet 1 lan.
 const LOG_CHUNK_SIZE = 9000;
 
+// loadHistory() ban gom nhieu chuc lenh eth_getLogs/eth_getBlock chay gan nhu cung
+// luc (9 loai su kien x nhieu doan block) - RPC mien phi (vd RPC mac dinh MetaMask
+// dung cho Sepolia) de bi loi/tra ve 429 tam thoi khi bi goi don dap nhu vay. Chi
+// can 1 loi don le la lam hong ca lan tai lich su (Promise.all reject het). Thu lai
+// vai lan voi do tre tang dan truoc khi that bai that su, thay vi bo cuoc ngay.
+async function withRetry(fn, retries = 3, baseDelayMs = 500) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, baseDelayMs * (attempt + 1)));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 async function queryFilterChunked(contract, filter, fromBlock) {
-  const latest = await contract.runner.provider.getBlockNumber();
+  const latest = await withRetry(() => contract.runner.provider.getBlockNumber());
   if (fromBlock > latest) return [];
   const results = [];
   for (let start = fromBlock; start <= latest; start += LOG_CHUNK_SIZE) {
     const end = Math.min(start + LOG_CHUNK_SIZE - 1, latest);
-    const chunk = await contract.queryFilter(filter, start, end);
+    const chunk = await withRetry(() => contract.queryFilter(filter, start, end));
     results.push(...chunk);
   }
   return results;
@@ -149,9 +169,9 @@ export class ChainRentalService {
 
     // PropertyListed/SettlementProposed/DisputeVoteCast khong mang timestamp trong
     // event args -> lay tu block.
-    const listedBlocks = await Promise.all(listed.map((e) => e.getBlock()));
-    const proposedBlocks = await Promise.all(proposed.map((e) => e.getBlock()));
-    const voteBlocks = await Promise.all(votes.map((e) => e.getBlock()));
+    const listedBlocks = await Promise.all(listed.map((e) => withRetry(() => e.getBlock())));
+    const proposedBlocks = await Promise.all(proposed.map((e) => withRetry(() => e.getBlock())));
+    const voteBlocks = await Promise.all(votes.map((e) => withRetry(() => e.getBlock())));
 
     listed.forEach((e, i) => {
       const id = Number(e.args[0]);
