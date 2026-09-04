@@ -48,6 +48,16 @@ export function RentalProvider({ children }) {
     if (account) loadData();
   }, [account, loadData]);
 
+  // Tu lam moi dinh ky khi da ket noi vao mang that (khong can voi mock, du lieu
+  // khong tu doi) - de UI thay duoc thay doi do NGUOI KHAC lam (vd landlord va tenant
+  // mo 2 tab/vi khac nhau) ma khong phai tu tay bam F5. runTx() da tu lam moi ngay
+  // sau giao dich CUA CHINH minh roi - phan nay bu cho truong hop thay doi tu ben ngoai.
+  useEffect(() => {
+    if (!account || service.isMock) return;
+    const id = setInterval(() => loadData(), 20000);
+    return () => clearInterval(id);
+  }, [account, service, loadData]);
+
   useEffect(() => {
     if (service.isMock) {
       // Che do mau: tu ket noi ngay de xem duoc UI day du ma khong can bam gi.
@@ -150,6 +160,7 @@ export function RentalProvider({ children }) {
     busy,
     toast,
     isArbiter,
+    refresh: loadData,
     connect,
     disconnect,
     canSwitchWallet: !service.isMock,

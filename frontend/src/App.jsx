@@ -14,7 +14,7 @@ function AppShell() {
   const {
     isMock, isConfigured, mockAccounts, switchMockAccount,
     account, properties, history, busy, toast,
-    connect, disconnect, canSwitchWallet, switchWallet, listProperty,
+    connect, disconnect, canSwitchWallet, switchWallet, listProperty, refresh,
   } = useRental();
   const [tab, setTab] = useState("browse");
   const [selectedTx, setSelectedTx] = useState(null);
@@ -27,6 +27,7 @@ function AppShell() {
         onDisconnect={disconnect}
         onSwitchWallet={switchWallet}
         canSwitchWallet={canSwitchWallet}
+        onRefresh={refresh}
       />
 
       <ModeBanner

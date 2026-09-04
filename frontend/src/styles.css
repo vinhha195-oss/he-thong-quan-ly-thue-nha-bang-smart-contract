@@ -100,6 +100,7 @@ body {
   transition: color .15s var(--ease), background .15s var(--ease), transform .15s var(--ease);
 }
 .wallet-chip-switch:hover { background: var(--teal-wash); color: var(--teal-dark); transform: rotate(180deg); }
+.wallet-chip-switch.spinning { animation: spin .6s linear infinite; background: var(--teal-wash); color: var(--teal-dark); }
 
 .wallet-menu-account {
   display: flex; align-items: center; gap: 12px; padding: 14px; margin: 4px 0 20px;
